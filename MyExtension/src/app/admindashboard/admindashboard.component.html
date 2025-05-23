@@ -1,0 +1,44 @@
+<div class="admin-dashboard">
+  <h2>Admin Dashboard</h2>
+
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
+    <div class="form-row">
+      <input formControlName="username" placeholder="Username" />
+      <input formControlName="email" placeholder="Email" />
+      <input 
+        formControlName="password" 
+        [type]="editingUserId ? 'text' : 'password'" 
+        placeholder="Password"
+        [required]="!editingUserId" 
+      />
+      <select formControlName="role">
+        <option value="User">User</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-buttons">
+      <button type="submit" class="btn primary">{{ editingUserId ? 'Update' : 'Create' }}</button>
+      <button type="button" class="btn secondary" (click)="cancelEdit()" *ngIf="editingUserId">Cancel</button>
+    </div>
+  </form>
+
+  <table class="user-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users">
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+        <td>
+          <button (click)="editUser(user)" class="btn small edit">Edit</button>
+          <button (click)="deleteUser(user.id)" class="btn small delete">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

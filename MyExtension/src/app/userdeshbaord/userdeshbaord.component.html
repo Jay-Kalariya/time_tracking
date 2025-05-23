@@ -1,0 +1,18 @@
+<!-- Show dashboard only if user is logged in -->
+<div *ngIf="isLoggedIn">
+  <label for="task">Select Task:</label>
+  <select id="task" (change)="selectTask($event)">
+    <option *ngFor="let task of tasks" [value]="task.id">{{ task.name }}</option>
+  </select>
+
+  <h3>Timer: {{ formatTime() }}</h3>
+
+  <button (click)="pushTask()">Push</button>
+  <button (click)="lunchBreak()">Lunch Break</button>
+  <button (click)="dayOff()">Day Off</button>
+</div>
+
+<!-- Optional: message if not logged in -->
+<div *ngIf="!isLoggedIn">
+  <p>Please login to access the dashboard.</p>
+</div>
