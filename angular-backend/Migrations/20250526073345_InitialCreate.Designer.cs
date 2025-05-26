@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dotnet1.Migrations
 {
     [DbContext(typeof(TimeTrackingContext))]
-    [Migration("20250513181836_Added Role")]
-    partial class AddedRole
+    [Migration("20250526073345_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,13 +33,69 @@ namespace Dotnet1.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("TaskName")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
                     b.ToTable("Tasks");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Coding"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Meeting"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Break"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Lunch"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Day Off"
+                        });
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.TaskSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TaskSessions");
                 });
 
             modelBuilder.Entity("Dotnet1.Models.User", b =>
@@ -54,12 +110,13 @@ namespace Dotnet1.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -90,20 +147,31 @@ namespace Dotnet1.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("UserTokens");
                 });
 
-            modelBuilder.Entity("Dotnet1.Models.UserToken", b =>
+            modelBuilder.Entity("Dotnet1.Models.TaskSession", b =>
                 {
-                    b.HasOne("Dotnet1.Models.User", "User")
+                    b.HasOne("Dotnet1.Models.Task", "Task")
                         .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Dotnet1.Models.User", "User")
+                        .WithMany("TaskSessions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Task");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.User", b =>
+                {
+                    b.Navigation("TaskSessions");
                 });
 #pragma warning restore 612, 618
         }

@@ -20,6 +20,7 @@ builder.Services.AddDbContext<TimeTrackingContext>(options =>
 
 
 
+
 // Register custom services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
@@ -61,7 +62,9 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(secretKey)
     };
+    
 });
+
 
 builder.Services.AddAuthorization();
 
