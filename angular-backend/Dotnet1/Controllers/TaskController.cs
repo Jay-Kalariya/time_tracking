@@ -57,5 +57,15 @@ namespace Dotnet1.Controllers
             var history = await _taskService.GetTaskHistoryAsync(userId);
             return Ok(history);
         }
+// inside TaskController
+[HttpGet("admin/history/{userId}")]
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> GetUserTaskHistory(int userId)
+{
+    var history = await _taskService.GetTaskHistoryAsync(userId);
+    return Ok(history);
+}
+
+
     }
 }

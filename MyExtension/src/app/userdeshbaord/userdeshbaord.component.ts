@@ -21,6 +21,7 @@ export class UserDashboardComponent implements OnInit {
   seconds = 0;
   isPaused = false;
   isLoggedIn = false;
+  currentISTTime: string = '';
 
   constructor(private taskService: TaskService) { }
 
@@ -28,8 +29,27 @@ export class UserDashboardComponent implements OnInit {
     const token = localStorage.getItem('token');
     this.isLoggedIn = !!token;
 
+    this.updateCurrentISTTime();
+    setInterval(() => this.updateCurrentISTTime(), 1000);
+
     // Optional: fetch tasks dynamically
     // this.taskService.getAvailableTasks().subscribe(tasks => this.tasks = tasks);
+  }
+
+  updateCurrentISTTime() {
+    const nowUTC = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // IST offset
+    const istTime = new Date(nowUTC.getTime() + istOffset);
+    this.currentISTTime = istTime.toLocaleString('en-IN', {
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+      hour12: true,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata',
+    });
   }
 
   selectTask(event: Event) {
@@ -37,17 +57,14 @@ export class UserDashboardComponent implements OnInit {
     const newTaskId = +target.value;
 
     if (this.selectedTaskId !== null) {
-      // End current task first
       this.taskService.endTask().subscribe(() => {
         this.stopTimer();
-        // Start new task
         this.taskService.startTask(newTaskId).subscribe(() => {
           this.selectedTaskId = newTaskId;
           this.startTimer();
         });
       });
     } else {
-      // No current task, just start selected
       this.taskService.startTask(newTaskId).subscribe(() => {
         this.selectedTaskId = newTaskId;
         this.startTimer();

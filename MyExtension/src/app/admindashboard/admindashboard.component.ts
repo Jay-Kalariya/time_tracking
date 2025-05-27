@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 interface User {
   id: number;
@@ -21,7 +22,7 @@ export class AdminDashboardComponent implements OnInit {
   users: User[] = [];
   editingUserId: number | null = null;
 
-  constructor(private fb: FormBuilder, private http: HttpClient) {
+  constructor(private fb: FormBuilder, private http: HttpClient,  private router: Router) {
     this.userForm = this.fb.group({
       username: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -111,4 +112,9 @@ export class AdminDashboardComponent implements OnInit {
     this.editingUserId = null;
     this.userForm.reset({ role: 'User' });
   }
+
+ viewUser(user: User): void {
+  this.router.navigate(['/user-details', user.id]);
+}
+
 }

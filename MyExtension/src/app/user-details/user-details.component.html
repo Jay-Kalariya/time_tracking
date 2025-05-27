@@ -1,0 +1,33 @@
+<h3>Task History</h3>
+
+<div *ngIf="errorMessage" class="error">
+    <p>{{ errorMessage }}</p>
+</div>
+
+<div *ngIf="!errorMessage && taskHistory.length === 0">
+    <p>No task history found for this user.</p>
+</div>
+
+<table *ngIf="taskHistory.length > 0">
+    <thead>
+        <tr>
+            <th>Task Type ID</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Duration</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let task of taskHistory">
+            <td>{{ task.taskId }}</td>
+            <!-- <td>{{ task.startTime | date: 'short' }}</td>
+            <td>{{ task.endTime | date: 'short' }}</td> -->
+            <td>{{ task.startTime | date: 'dd-MMM-yyyy hh:mm:ss a' : '+0530'
+                }}</td>
+            <td>{{ task.endTime | date: 'dd-MMM-yyyy hh:mm:ss a' : '+0530'
+                }}</td>
+
+            <td>{{ calculateDuration(task.startTime, task.endTime) }}</td>
+        </tr>
+    </tbody>
+</table>

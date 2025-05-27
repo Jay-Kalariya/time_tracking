@@ -4,6 +4,7 @@ import { RegisterComponent } from './register/register.component';
 import { AdminDashboardComponent } from './admindashboard/admindashboard.component';
 import { UserDashboardComponent } from './userdeshbaord/userdeshbaord.component';
 import  {LoginComponent}  from './login/login.component';
+import { UserDetailsComponent } from './user-details/user-details.component';
 
 export const routes: Routes = [
      {
@@ -30,5 +31,11 @@ export const routes: Routes = [
         {
             path:'userdashboard',
             component:UserDashboardComponent
+        }
+        ,
+        {
+           path: 'user-details/:id', 
+           component: UserDetailsComponent 
+
         }
 ];

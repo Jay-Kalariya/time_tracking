@@ -5,20 +5,21 @@
     <div class="form-row">
       <input formControlName="username" placeholder="Username" />
       <input formControlName="email" placeholder="Email" />
-      <input 
-        formControlName="password" 
-        [type]="editingUserId ? 'text' : 'password'" 
+      <input
+        formControlName="password"
+        [type]="editingUserId ? 'text' : 'password'"
         placeholder="Password"
-        [required]="!editingUserId" 
-      />
+        [required]="!editingUserId" />
       <select formControlName="role">
         <option value="User">User</option>
         <option value="Admin">Admin</option>
       </select>
     </div>
     <div class="form-buttons">
-      <button type="submit" class="btn primary">{{ editingUserId ? 'Update' : 'Create' }}</button>
-      <button type="button" class="btn secondary" (click)="cancelEdit()" *ngIf="editingUserId">Cancel</button>
+      <button type="submit" class="btn primary">{{ editingUserId ? 'Update' :
+        'Create' }}</button>
+      <button type="button" class="btn secondary" (click)="cancelEdit()"
+        *ngIf="editingUserId">Cancel</button>
     </div>
   </form>
 
@@ -36,7 +37,10 @@
         <td>{{ user.role }}</td>
         <td>
           <button (click)="editUser(user)" class="btn small edit">Edit</button>
-          <button (click)="deleteUser(user.id)" class="btn small delete">Delete</button>
+          <button (click)="deleteUser(user.id)"
+            class="btn small delete">Delete</button>
+          <button (click)="viewUser(user)" class="btn small view">View</button>
+
         </td>
       </tr>
     </tbody>

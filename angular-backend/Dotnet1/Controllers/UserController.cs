@@ -27,16 +27,14 @@ namespace Dotnet1.Controllers
         }
 
         // GET: api/user/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserByIdAsync(int id)
+      [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
-            if (user == null)
-                return NotFound(new { message = "User not found." });
-
+            if (user == null) return NotFound();
             return Ok(user);
         }
-
+    
         // PUT: api/user/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUserAsync(int id, [FromBody] User updatedUser)
@@ -74,5 +72,5 @@ namespace Dotnet1.Controllers
 
             return Ok(new { id, username, email, role });
         }
-    }
+}
 }
