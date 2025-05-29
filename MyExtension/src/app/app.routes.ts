@@ -6,6 +6,8 @@ import { UserDashboardComponent } from './userdeshbaord/userdeshbaord.component'
 import  {LoginComponent}  from './login/login.component';
 import { UserDetailsComponent } from './user-details/user-details.component';
 
+
+
 export const routes: Routes = [
      {
     path: '',
@@ -38,4 +40,5 @@ export const routes: Routes = [
            component: UserDetailsComponent 
 
         }
+       
 ];

@@ -9,7 +9,7 @@ namespace Dotnet1.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // All authenticated users can access this
+    [Authorize]
     public class TaskController : ControllerBase
     {
         private readonly TaskService _taskService;
@@ -19,16 +19,22 @@ namespace Dotnet1.Controllers
             _taskService = taskService;
         }
 
-        // POST api/task/start
         [HttpPost("start")]
         public async Task<IActionResult> StartTaskAsync([FromBody] TaskStartDto startTaskDto)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var session = await _taskService.StartTaskAsync(userId, startTaskDto.TaskTypeId);
-            return Ok(session);
+
+            try
+            {
+                var session = await _taskService.StartTaskAsync(userId, startTaskDto.TaskTypeId);
+                return Ok(session);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
-        // POST api/task/end
         [HttpPost("end")]
         public async Task<IActionResult> EndCurrentTaskAsync()
         {
@@ -40,16 +46,21 @@ namespace Dotnet1.Controllers
             return Ok(new { message = "Task ended successfully." });
         }
 
-        // POST api/task/break
         [HttpPost("break")]
         public async Task<IActionResult> GoOnBreakAsync([FromBody] string breakType)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var session = await _taskService.GoOnBreakAsync(userId, breakType);
-            return Ok(session);
+            try
+            {
+                var session = await _taskService.GoOnBreakAsync(userId, breakType);
+                return Ok(session);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
-        // GET api/task/history
         [HttpGet("history")]
         public async Task<IActionResult> GetTaskHistoryAsync()
         {
@@ -57,15 +68,21 @@ namespace Dotnet1.Controllers
             var history = await _taskService.GetTaskHistoryAsync(userId);
             return Ok(history);
         }
-// inside TaskController
-[HttpGet("admin/history/{userId}")]
+
+        [HttpGet("admin/history/{userId}")]
 [Authorize(Roles = "Admin")]
 public async Task<IActionResult> GetUserTaskHistory(int userId)
 {
-    var history = await _taskService.GetTaskHistoryAsync(userId);
-    return Ok(history);
+    try
+    {
+        var history = await _taskService.GetTaskHistoryAsync(userId);
+        return Ok(history);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Failed to get task history", error = ex.Message });
+    }
 }
-
 
     }
 }

@@ -1,20 +1,61 @@
-<!-- Show dashboard only if user is logged in -->
-<div *ngIf="isLoggedIn">
-  <label for="task">Select Task:</label>
-  <select id="task" (change)="selectTask($event)">
-    <option *ngFor="let task of tasks" [value]="task.id">{{ task.name }}</option>
-  </select>
+<div *ngIf="isLoggedIn" class="dashboard-container">
+  <h2>User Dashboard</h2>
 
-  <h3>Timer: {{ formatTime() }}</h3>
-  
+  <div class="task-select">
+    <label for="task">Select Task:</label>
+    <select
+      id="task"
+      (change)="selectTask($event)"
+      [disabled]="
+        nonWorkingPeriodActive &&
+        !['Lunch', 'Break', 'Day Off'].includes(selectedTask?.name ?? '')
+      "
+    >
+      <option value="" disabled selected>Select a task</option>
+      <option *ngFor="let task of tasks" [value]="task.id">
+        {{ task.name }}
+      </option>
+    </select>
+  </div>
 
+  <div class="timer-display">
+    <h3>Timer: {{ formatTime() }}</h3>
+    <div *ngIf="selectedTask">
+      <h4>Current Task: {{ selectedTask.name }}</h4>
+    </div>
+  </div>
 
-  <button (click)="pushTask()">Push</button>
-  <button (click)="lunchBreak()">Lunch Break</button>
-  <button (click)="dayOff()">Day Off</button>
+  <div class="button-group">
+    <button
+      (click)="pushTask()"
+      [disabled]="showStartButton || nonWorkingPeriodActive || !selectedTask"
+    >
+      Push
+    </button>
+    <button (click)="resumeTask()" *ngIf="showStartButton" [disabled]="nonWorkingPeriodActive">
+      Start
+    </button>
+    <button (click)="stopTask()" [disabled]="nonWorkingPeriodActive || !selectedTask">
+      Stop
+    </button>
+
+    <!-- Conditional break buttons -->
+    <button *ngIf="selectedTask?.name === 'Lunch'" (click)="stopCurrentBreak()">
+      Lunch Break Stop
+    </button>
+    <button *ngIf="selectedTask?.name === 'Break'" (click)="stopCurrentBreak()">
+      Break Over
+    </button>
+    <button *ngIf="selectedTask?.name === 'Day Off'" (click)="stopCurrentBreak()">
+      Day Off Over
+    </button>
+
+    <button (click)="dayOff()" [disabled]="nonWorkingPeriodActive || selectedTask?.name === 'Day Off'">
+      Day Off
+    </button>
+  </div>
 </div>
 
-<!-- Optional: message if not logged in -->
-<div *ngIf="!isLoggedIn">
+<div *ngIf="!isLoggedIn" class="not-logged-in">
   <p>Please login to access the dashboard.</p>
 </div>

@@ -10,17 +10,18 @@ export class TaskService {
   endTask() {
     return this.http.post(`${this.apiUrl}/end`, {});
   }
-  startBreak(breakType: string) {
-    return this.http.post(`${this.apiUrl}/break`, breakType, {
-      headers: { 'Content-Type': 'text/plain' }
-    });
-  }
+ startBreak(breakType: string) {
+  return this.http.post(`${this.apiUrl}/break`, JSON.stringify(breakType), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
   getHistory() {
     return this.http.get(`${this.apiUrl}/history`);
   }
-
+// ✅ Fixed endpoint for admin history
   getUserHistory(userId: number) {
-  return this.http.get<any[]>(`http://localhost:5236/api/User/${userId}/history`);
-}
+    return this.http.get<any[]>(`${this.apiUrl}/admin/history/${userId}`);
+  }
+
 
 }

@@ -117,4 +117,7 @@ export class AdminDashboardComponent implements OnInit {
   this.router.navigate(['/user-details', user.id]);
 }
 
+
+  
+
 }
