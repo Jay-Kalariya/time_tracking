@@ -1,4 +1,4 @@
-<h3>Task History</h3>
+<h2 *ngIf="userInfo">Task History for {{ userInfo.username }}</h2>
 
 <input type="text" placeholder="Search task..." [(ngModel)]="searchTerm" class="search-input" />
 
@@ -6,32 +6,41 @@
   <p>{{ errorMessage }}</p>
 </div>
 
-<div *ngIf="!errorMessage && filteredTaskHistory.length === 0">
-  <p>No task history found for this user.</p>
-</div>
-
 <div class="navigation">
   <button (click)="goToAdminDashboard()">Previous</button>
 </div>
 
-<table *ngIf="filteredTaskHistory.length > 0">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Task Name</th>
-      <th>Total Duration</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let item of filteredTaskHistory">
-      <td>{{ item.date }}</td>
-      <td>{{ item.taskName }}</td>
-      <td>{{ item.totalDuration }}</td>
-    </tr>
-  </tbody>
-</table>
+<div *ngIf="getMonthKeys().length === 0 && !errorMessage">
+  <p>No task history found for this user.</p>
+</div>
 
-<!-- Show total duration of all tasks for the day -->
-<div *ngIf="filteredTaskHistory.length > 0" class="total-summary">
-  <strong>Total Time: {{ getTotalTimeForFiltered() }}</strong>
+<!-- Loop over each month -->
+<div *ngFor="let month of getMonthKeys()">
+  <h4>{{ month }}</h4>
+
+  <table *ngIf="getFilteredTasksForMonth(month).length > 0">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Task Name</th>
+        <th>Total Duration</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of getFilteredTasksForMonth(month); trackBy: trackByTask">
+        <td>{{ item.date }}</td>
+        <td>{{ item.taskName }}</td>
+        <td>{{ item.totalDuration }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="monthly-summary" *ngIf="getFilteredTasksForMonth(month).length > 0">
+    <strong>Monthly Total: {{ formatDuration(monthlyTotals[month]) }}</strong>
+  </div>
+</div>
+
+<!-- Optional: Total lunch break duration -->
+<div *ngIf="lunchBreakTotal" class="lunch-summary">
+  <strong>Total Lunch Break Time: {{ lunchBreakTotal }}</strong>
 </div>

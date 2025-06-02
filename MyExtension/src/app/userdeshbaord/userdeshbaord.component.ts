@@ -29,6 +29,17 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   showStartButton = false;
   nonWorkingPeriodActive = false;
 
+  userTaskHistory: any[] = [];
+  filteredHistory: any[] = [];
+  showHistory = false;
+
+  currentPage = 1;
+  itemsPerPage = 5;
+  totalPages = 0;
+
+  filterDate: string = '';
+  
+
   constructor(private taskService: TaskService) {}
 
   ngOnInit(): void {
@@ -36,6 +47,15 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     this.isLoggedIn = !!token;
     this.updateCurrentISTTime();
     setInterval(() => this.updateCurrentISTTime(), 1000);
+
+    this.taskService.getUserHistoryTask().subscribe({
+      next: (history) => {
+        this.userTaskHistory = history;
+        this.applyFiltersAndPagination();
+        this.showHistory = true;
+      },
+      error: () => alert('Failed to load task history')
+    });
   }
 
   ngOnDestroy(): void {
@@ -192,4 +212,53 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     const s = this.seconds % 60;
     return `${h}h ${m}m ${s}s`;
   }
+
+applyFiltersAndPagination() {
+  let filtered = this.userTaskHistory;
+
+  if (this.filterDate) {
+    const selectedDate = new Date(this.filterDate);
+    selectedDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(selectedDate);
+    nextDay.setDate(selectedDate.getDate() + 1);
+
+    filtered = filtered.filter(entry => {
+      const start = new Date(entry.startTime);
+      const end = new Date(entry.endTime);
+      return (
+        (start >= selectedDate && start < nextDay) ||
+        (end >= selectedDate && end < nextDay)
+      );
+    });
+  }
+
+  this.totalPages = Math.ceil(filtered.length / this.itemsPerPage);
+  const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+  const endIndex = startIndex + this.itemsPerPage;
+  this.filteredHistory = filtered.slice(startIndex, endIndex);
+}
+
+
+  changePage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.applyFiltersAndPagination();
+    }
+  }
+
+  onFilterChange() {
+    this.currentPage = 1;
+    this.applyFiltersAndPagination();
+  }
+
+ formatDuration(seconds: number | null | undefined): string {
+  if (typeof seconds !== 'number' || isNaN(seconds)) {
+    return '0h 0m 0s';
+  }
+
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${h}h ${m}m ${s}s`;
+}
 }

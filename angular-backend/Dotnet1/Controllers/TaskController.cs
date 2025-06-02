@@ -69,7 +69,7 @@ namespace Dotnet1.Controllers
             return Ok(history);
         }
 
-        [HttpGet("admin/history/{userId}")]
+   [HttpGet("admin/history/{userId}")]
 [Authorize(Roles = "Admin")]
 public async Task<IActionResult> GetUserTaskHistory(int userId)
 {
@@ -80,9 +80,11 @@ public async Task<IActionResult> GetUserTaskHistory(int userId)
     }
     catch (Exception ex)
     {
+        Console.WriteLine($"[ERROR] Failed to fetch task history for user {userId}: {ex}");
         return StatusCode(500, new { message = "Failed to get task history", error = ex.Message });
     }
 }
+
 
     }
 }

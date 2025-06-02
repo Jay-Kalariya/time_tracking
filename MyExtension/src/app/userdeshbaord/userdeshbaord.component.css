@@ -58,3 +58,20 @@ button:hover {
   color: #c00;
   font-size: 18px;
 }
+
+
+
+.history-section {
+  margin-top: 20px;
+}
+.history-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.history-section th, .history-section td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+.history-section th {
+  background-color: #f2f2f2;
+}

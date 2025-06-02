@@ -17,11 +17,11 @@ export class UserDetailsComponent implements OnInit {
   breakHistory: any[] = [];
   errorMessage: string = '';
 
-  aggregatedTaskHistory: any[] = [];
-  breakSummary: any[] = [];
+  searchTerm: string = '';
   lunchBreakTotal: string = '';
 
-  searchTerm: string = '';  // <---- Add this for ngModel binding
+  monthlyTaskHistory: { [month: string]: any[] } = {};
+  monthlyTotals: { [month: string]: number } = {};
 
   constructor(private route: ActivatedRoute, private http: HttpClient, private router: Router) {}
 
@@ -45,61 +45,36 @@ export class UserDetailsComponent implements OnInit {
 
         this.http.get(`http://localhost:5236/api/User/${this.userId}`, { headers }).subscribe({
           next: data => this.userInfo = data,
-          error: err => {
-            this.errorMessage = 'Failed to load user info.';
-          }
+          error: () => this.errorMessage = 'Failed to load user info.'
         });
 
         this.http.get<any[]>(`http://localhost:5236/api/task/admin/history/${this.userId}`, { headers }).subscribe({
           next: data => {
-            // Separate tasks and breaks
-            this.breakHistory = data.filter(t => t.taskName === 'Lunch' || t.taskName === 'DayOff');
-            this.taskHistory = data.filter(t => !(t.taskName === 'Lunch' || t.taskName === 'DayOff'));
+            this.breakHistory = data.filter(t => t.taskName === 'Lunch' || t.taskName === 'Day Off');
+            this.taskHistory = data.filter(t => !(t.taskName === 'Lunch' || t.taskName === 'Day Off'));
 
             this.aggregateTaskHistory();
             this.processBreaks();
           },
-          error: err => {
-            this.errorMessage = 'Failed to load task history.';
-          }
+          error: () => this.errorMessage = 'Failed to load task history.'
         });
       })
-      .catch(err => {
+      .catch(() => {
         this.errorMessage = 'Authentication error.';
       });
   }
 
-  // Filtered tasks based on search term (getter)
-  get filteredTaskHistory() {
-    if (!this.searchTerm) {
-      return this.aggregatedTaskHistory;
-    }
-    const lowerSearch = this.searchTerm.toLowerCase();
-    return this.aggregatedTaskHistory.filter(task =>
-      task.taskName.toLowerCase().includes(lowerSearch) || task.date.includes(lowerSearch)
-    );
-  }
-
-  // Sum total time of filtered tasks
-  getTotalTimeForFiltered(): string {
-    const totalSeconds = this.filteredTaskHistory.reduce((sum, task) => {
-      // Extract totalSeconds from totalDuration string is complicated, so better keep seconds separately in aggregatedTaskHistory
-      // Let's modify aggregateTaskHistory to store totalSeconds as well (already done).
-      return sum + (task.totalSeconds || 0);
-    }, 0);
-    return this.formatDuration(totalSeconds);
-  }
-
-  // Group work tasks by date and taskName
   aggregateTaskHistory() {
     const grouped = new Map<string, { taskName: string; totalSeconds: number; date: string }>();
+    const monthMap: { [month: string]: any[] } = {};
+    const monthTotals: { [month: string]: number } = {};
 
     for (const task of this.taskHistory) {
       const start = new Date(task.startTime);
       const end = new Date(task.endTime);
       const date = start.toISOString().split('T')[0];
+      const month = start.toLocaleString('default', { month: 'long', year: 'numeric' }); // e.g. "May 2025"
       const key = `${date}_${task.taskName}`;
-
       const duration = (end.getTime() - start.getTime()) / 1000;
 
       if (grouped.has(key)) {
@@ -107,15 +82,44 @@ export class UserDetailsComponent implements OnInit {
       } else {
         grouped.set(key, { taskName: task.taskName, totalSeconds: duration, date });
       }
+
+      if (!monthMap[month]) monthMap[month] = [];
+      monthMap[month].push({ taskName: task.taskName, totalSeconds: duration, date });
+
+      if (!monthTotals[month]) monthTotals[month] = 0;
+      monthTotals[month] += duration;
     }
 
-    this.aggregatedTaskHistory = Array.from(grouped.values()).map(g => ({
-      ...g,
-      totalDuration: this.formatDuration(g.totalSeconds),
-    }));
+    this.monthlyTaskHistory = {};
+    for (const [month, entries] of Object.entries(monthMap)) {
+      const aggMap = new Map<string, { taskName: string; totalSeconds: number; date: string }>();
+      for (const entry of entries) {
+        const key = `${entry.date}_${entry.taskName}`;
+        if (aggMap.has(key)) {
+          aggMap.get(key)!.totalSeconds += entry.totalSeconds;
+        } else {
+          aggMap.set(key, { ...entry });
+        }
+      }
+      this.monthlyTaskHistory[month] = Array.from(aggMap.values()).map(g => ({
+        ...g,
+        totalDuration: this.formatDuration(g.totalSeconds),
+      }));
+    }
+
+    this.monthlyTotals = monthTotals;
   }
 
-  // Aggregate breaks by date and break type
+  getMonthKeys(): string[] {
+    return Object.keys(this.monthlyTaskHistory).sort((a, b) => {
+      const [monthA, yearA] = a.split(' ');
+      const [monthB, yearB] = b.split(' ');
+      const dateA = new Date(`${monthA} 1, ${yearA}`);
+      const dateB = new Date(`${monthB} 1, ${yearB}`);
+      return dateA.getTime() - dateB.getTime();
+    });
+  }
+
   processBreaks() {
     const grouped = new Map<string, { breakType: string; totalSeconds: number; date: string }>();
 
@@ -124,7 +128,6 @@ export class UserDetailsComponent implements OnInit {
       const end = new Date(b.endTime);
       const date = start.toISOString().split('T')[0];
       const key = `${date}_${b.taskName}`;
-
       const duration = (end.getTime() - start.getTime()) / 1000;
 
       if (grouped.has(key)) {
@@ -134,13 +137,7 @@ export class UserDetailsComponent implements OnInit {
       }
     }
 
-    this.breakSummary = Array.from(grouped.values()).map(g => ({
-      ...g,
-      totalDuration: this.formatDuration(g.totalSeconds),
-    }));
-
-    // Calculate total lunch break duration across all days
-    const lunchSeconds = this.breakSummary
+    const lunchSeconds = Array.from(grouped.values())
       .filter(b => b.breakType === 'Lunch')
       .reduce((sum, b) => sum + b.totalSeconds, 0);
 
@@ -153,16 +150,24 @@ export class UserDetailsComponent implements OnInit {
     return `${hours}h ${minutes}m`;
   }
 
-  calculateDuration(start: string, end: string): string {
-    const startTime = new Date(start);
-    const endTime = new Date(end);
-    const diff = (endTime.getTime() - startTime.getTime()) / 1000;
-    const hours = Math.floor(diff / 3600);
-    const minutes = Math.floor((diff % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  }
-
   goToAdminDashboard() {
     this.router.navigate(['/admindashboard']);
+  }
+
+  // ** New function for filtering tasks by search term **
+  getFilteredTasksForMonth(month: string) {
+    if (!this.monthlyTaskHistory[month]) return [];
+
+    if (!this.searchTerm) return this.monthlyTaskHistory[month];
+
+    const term = this.searchTerm.toLowerCase();
+
+    return this.monthlyTaskHistory[month].filter(task =>
+      task.taskName.toLowerCase().includes(term)
+    );
+  }
+
+  trackByTask(index: number, item: any) {
+    return item.date + item.taskName;
   }
 }
