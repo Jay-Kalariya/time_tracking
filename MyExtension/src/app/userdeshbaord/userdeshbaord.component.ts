@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 import { TaskService } from '../services/task.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -29,33 +30,13 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
   showStartButton = false;
   nonWorkingPeriodActive = false;
 
-  userTaskHistory: any[] = [];
-  filteredHistory: any[] = [];
-  showHistory = false;
-
-  currentPage = 1;
-  itemsPerPage = 5;
-  totalPages = 0;
-
-  filterDate: string = '';
-  
-
-  constructor(private taskService: TaskService) {}
+  constructor(private taskService: TaskService, private router: Router) {}
 
   ngOnInit(): void {
     const token = localStorage.getItem('token');
     this.isLoggedIn = !!token;
     this.updateCurrentISTTime();
     setInterval(() => this.updateCurrentISTTime(), 1000);
-
-    this.taskService.getUserHistoryTask().subscribe({
-      next: (history) => {
-        this.userTaskHistory = history;
-        this.applyFiltersAndPagination();
-        this.showHistory = true;
-      },
-      error: () => alert('Failed to load task history')
-    });
   }
 
   ngOnDestroy(): void {
@@ -86,7 +67,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     if (this.selectedTask) {
       this.taskService.endTask().subscribe({
         next: () => this.startNewTask(newTask),
-        error: (err) => alert('Failed to end current task. Please try again.')
+        error: () => alert('Failed to end current task.')
       });
     } else {
       this.startNewTask(newTask);
@@ -110,7 +91,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         this.startTimer();
         this.nonWorkingPeriodActive = ['Lunch', 'Break', 'Day Off'].includes(task.name);
       },
-      error: () => alert('Failed to start the task. Please try again.')
+      error: () => alert('Failed to start the task.')
     });
   }
 
@@ -140,7 +121,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         this.selectedTask = null;
         this.nonWorkingPeriodActive = false;
       },
-      error: () => alert('Failed to push the task. Please try again.')
+      error: () => alert('Failed to push the task.')
     });
   }
 
@@ -161,7 +142,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
           this.selectedTask = null;
           this.showStartButton = false;
         },
-        error: () => alert('Failed to end break. Please try again.')
+        error: () => alert('Failed to end break.')
       });
     }
   }
@@ -184,7 +165,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
         this.showStartButton = false;
         this.nonWorkingPeriodActive = true;
       },
-      error: () => alert('Failed to mark Day Off. Please try again.')
+      error: () => alert('Failed to mark Day Off.')
     });
   }
 
@@ -192,17 +173,17 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     if (this.selectedTask) {
       this.taskService.endTask().subscribe({
         next: () => {
-          alert('Task stopped and saved to database.');
+          alert('Task stopped and saved.');
           this.stopTimer();
           this.seconds = 0;
           this.selectedTask = null;
           this.showStartButton = false;
           this.nonWorkingPeriodActive = false;
         },
-        error: () => alert('Failed to stop task. Please try again.')
+        error: () => alert('Failed to stop task.')
       });
     } else {
-      alert('No active task to stop.');
+      alert('No active task.');
     }
   }
 
@@ -213,52 +194,7 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     return `${h}h ${m}m ${s}s`;
   }
 
-applyFiltersAndPagination() {
-  let filtered = this.userTaskHistory;
-
-  if (this.filterDate) {
-    const selectedDate = new Date(this.filterDate);
-    selectedDate.setHours(0, 0, 0, 0);
-    const nextDay = new Date(selectedDate);
-    nextDay.setDate(selectedDate.getDate() + 1);
-
-    filtered = filtered.filter(entry => {
-      const start = new Date(entry.startTime);
-      const end = new Date(entry.endTime);
-      return (
-        (start >= selectedDate && start < nextDay) ||
-        (end >= selectedDate && end < nextDay)
-      );
-    });
+  goToUserHistory() {
+    this.router.navigate(['/user-history']);
   }
-
-  this.totalPages = Math.ceil(filtered.length / this.itemsPerPage);
-  const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-  const endIndex = startIndex + this.itemsPerPage;
-  this.filteredHistory = filtered.slice(startIndex, endIndex);
-}
-
-
-  changePage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.applyFiltersAndPagination();
-    }
-  }
-
-  onFilterChange() {
-    this.currentPage = 1;
-    this.applyFiltersAndPagination();
-  }
-
- formatDuration(seconds: number | null | undefined): string {
-  if (typeof seconds !== 'number' || isNaN(seconds)) {
-    return '0h 0m 0s';
-  }
-
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return `${h}h ${m}m ${s}s`;
-}
 }

@@ -6,8 +6,12 @@ chrome.runtime.onInstalled.addListener(function () {
 });
 
 chrome.action.onClicked.addListener(() => {
-  chrome.tabs.create({ url: chrome.runtime.getURL('index.html#/login') });
+  const baseUrl = chrome.runtime.getURL('index.html');
+chrome.tabs.create({ url: `${baseUrl}#/login` });
 });
+
+
+
 
 // Listen for messages from the popup or content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

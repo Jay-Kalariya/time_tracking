@@ -5,6 +5,7 @@ import { AdminDashboardComponent } from './admindashboard/admindashboard.compone
 import { UserDashboardComponent } from './userdeshbaord/userdeshbaord.component';
 import  {LoginComponent}  from './login/login.component';
 import { UserDetailsComponent } from './user-details/user-details.component';
+import { UserHistoryComponent } from './user-history/user-history.component';
 
 
 
@@ -39,6 +40,11 @@ export const routes: Routes = [
            path: 'user-details/:id', 
            component: UserDetailsComponent 
 
+        },
+
+        {
+            path:"user-history",
+            component:UserHistoryComponent
         }
        
 ];

@@ -1,11 +1,10 @@
 <div class="admin-dashboard">
   <h2>Admin Dashboard</h2>
 
-    <div class="task-buttons" style="margin-bottom: 20px;">
-    <button  class="btn primary">Create Task</button>
-    <button  class="btn secondary">View All Tasks</button>
+  <div class="task-buttons">
+    <button class="btn primary">Create Task</button>
+    <button class="btn secondary">View All Tasks</button>
   </div>
-
 
   <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
     <div class="form-row">
@@ -22,31 +21,35 @@
       </select>
     </div>
     <div class="form-buttons">
-      <button type="submit" class="btn primary">{{ editingUserId ? 'Update' :
-        'Create' }}</button>
-      <button type="button" class="btn secondary" (click)="cancelEdit()"
-        *ngIf="editingUserId">Cancel</button>
+      <button type="submit" class="btn primary">{{ editingUserId ? 'Update' : 'Create' }}</button>
+      <button type="button" class="btn secondary" (click)="cancelEdit()" *ngIf="editingUserId">Cancel</button>
     </div>
   </form>
+
+  <div class="search">
+    <input type="text" [(ngModel)]="searchTerm" placeholder="Search by username/email/role" />
+  </div>
 
   <table class="user-table">
     <thead>
       <tr>
-        <th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Actions</th>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let user of users">
+      <tr *ngFor="let user of filteredUsers">
         <td>{{ user.id }}</td>
         <td>{{ user.username }}</td>
         <td>{{ user.email }}</td>
         <td>{{ user.role }}</td>
         <td>
           <button (click)="editUser(user)" class="btn small edit">Edit</button>
-          <button (click)="deleteUser(user.id)"
-            class="btn small delete">Delete</button>
+          <button (click)="deleteUser(user.id)" class="btn small delete">Delete</button>
           <button (click)="viewUser(user)" class="btn small view">View</button>
-
         </td>
       </tr>
     </tbody>

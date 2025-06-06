@@ -1,3 +1,6 @@
+
+
+
 <div *ngIf="isLoggedIn" class="dashboard-container">
   <h2>User Dashboard</h2>
 
@@ -53,7 +56,11 @@
     <button (click)="dayOff()" [disabled]="nonWorkingPeriodActive || selectedTask?.name === 'Day Off'">
       Day Off
     </button>
+
+    <button (click)="goToUserHistory()">View My History</button>
   </div>
+
+ 
 </div>
 
 <div *ngIf="!isLoggedIn" class="not-logged-in">
@@ -63,44 +70,3 @@
 
 
 
-
-
-<div *ngIf="showHistory" class="history-section">
-  <h3>My Task History</h3>
-
-  <!-- Date Filters -->
-  <div class="filter-section">
-   <label>Date:
-  <input type="date" [(ngModel)]="filterDate" (change)="onFilterChange()" />
-</label>
-  
-  </div>
-
-  <!-- Task History Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>Task Name</th>
-        <th>Start Time</th>
-        <th>End Time</th>
-        <th>Duration</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let entry of filteredHistory">
-        <td>{{ entry.taskName }}</td>
-        <td>{{ entry.startTime | date:'short' }}</td>
-        <td>{{ entry.endTime | date:'short' }}</td>
-        <td>{{ formatDuration(entry.duration) }}</td>
-
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Pagination Controls -->
-  <div class="pagination" *ngIf="totalPages > 1">
-    <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">Prev</button>
-    <span>Page {{ currentPage }} of {{ totalPages }}</span>
-    <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
-  </div>
-</div>

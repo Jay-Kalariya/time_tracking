@@ -31,6 +31,8 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  searchTerm: string = '';
+
   ngOnInit(): void {
     this.fetchUsers();
   }
@@ -117,6 +119,17 @@ export class AdminDashboardComponent implements OnInit {
   this.router.navigate(['/user-details', user.id]);
 }
 
+
+
+get filteredUsers(): User[] {
+  if (!this.searchTerm) return this.users;
+  const term = this.searchTerm.toLowerCase();
+  return this.users.filter(user =>
+    user.username.toLowerCase().includes(term) ||
+    user.email.toLowerCase().includes(term) ||
+    user.role.toLowerCase().includes(term)
+  );
+}
 
   
 
