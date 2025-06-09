@@ -20,7 +20,26 @@ export class LoginComponent implements OnInit {
 
   constructor(private auth: AuthService, private router: Router) {}
 
+  // ngOnInit(): void {
+  //   chrome.storage.local.get(['token'], (result: any) => {
+  //     const token = result.token;
+  //     if (token) {
+  //       this.auth.setToken(token);
+  //       const role = this.auth.getRole();
+  //       if (role === 'Admin') {
+  //         this.router.navigate(['/admindashboard'], { replaceUrl: true });
+  //       } else if (role) {
+  //         this.router.navigate(['/userdashboard'], { replaceUrl: true });
+  //       }
+  //     }
+  //   });
+  // }
+
   ngOnInit(): void {
+  const hash = location.hash;
+
+  // Only auto-redirect if on login or root (initial launch)
+  if (hash === '#/login' || hash === '' || hash === '#/' || hash === '#') {
     chrome.storage.local.get(['token'], (result: any) => {
       const token = result.token;
       if (token) {
@@ -34,6 +53,9 @@ export class LoginComponent implements OnInit {
       }
     });
   }
+}
+
+
 
   login() {
   this.auth.login(this.credentials).subscribe({

@@ -15,7 +15,9 @@ namespace Dotnet1.Services
         // Get all users
         public async Task<List<User>> GetAllUsersAsync()
         {
-            return await _dbContext.Users.ToListAsync();
+            return await _dbContext.Users
+      .Where(u => u.Role != "Admin")
+      .ToListAsync();
         }
 
         // Get user by ID

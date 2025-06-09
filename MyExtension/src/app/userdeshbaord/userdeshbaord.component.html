@@ -28,37 +28,50 @@
     </div>
   </div>
 
-  <div class="button-group">
+ <div class="button-group">
+  <!-- Show Push and Stop only for working tasks -->
+  <ng-container *ngIf="selectedTask && !['Break', 'Lunch', 'Day Off'].includes(selectedTask.name)">
     <button
       (click)="pushTask()"
       [disabled]="showStartButton || nonWorkingPeriodActive || !selectedTask"
     >
       Push
     </button>
-    <button (click)="resumeTask()" *ngIf="showStartButton" [disabled]="nonWorkingPeriodActive">
-      Start
-    </button>
-    <button (click)="stopTask()" [disabled]="nonWorkingPeriodActive || !selectedTask">
+
+    <button
+      (click)="stopTask()"
+      [disabled]="nonWorkingPeriodActive || !selectedTask"
+    >
       Stop
     </button>
 
-    <!-- Conditional break buttons -->
-    <button *ngIf="selectedTask?.name === 'Lunch'" (click)="stopCurrentBreak()">
-      Lunch Break Stop
+    <button
+      (click)="resumeTask()"
+      *ngIf="showStartButton"
+      [disabled]="nonWorkingPeriodActive"
+    >
+      Start
     </button>
-    <button *ngIf="selectedTask?.name === 'Break'" (click)="stopCurrentBreak()">
-      Break Over
-    </button>
-    <button *ngIf="selectedTask?.name === 'Day Off'" (click)="stopCurrentBreak()">
-      Day Off Over
-    </button>
+  </ng-container>
 
-    <button (click)="dayOff()" [disabled]="nonWorkingPeriodActive || selectedTask?.name === 'Day Off'">
-      Day Off
+  <!-- Show ending buttons for breaks or day off -->
+  <ng-container *ngIf="selectedTask && ['Break', 'Lunch', 'Day Off'].includes(selectedTask.name)">
+    <button (click)="stopCurrentBreak()">
+      {{ selectedTask.name === 'Break' ? 'Break Over' : selectedTask.name === 'Lunch' ? 'Lunch Break Over' : 'Day Off Over' }}
     </button>
+  </ng-container>
 
-    <button (click)="goToUserHistory()">View My History</button>
-  </div>
+  <button
+    (click)="dayOff()"
+    [disabled]="nonWorkingPeriodActive || selectedTask?.name === 'Day Off'"
+  >
+    Day Off
+  </button>
+
+  <button (click)="goToUserHistory()">View My History</button>
+</div>
+
+
 
  
 </div>

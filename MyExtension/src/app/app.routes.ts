@@ -12,9 +12,9 @@ import { UserHistoryComponent } from './user-history/user-history.component';
 export const routes: Routes = [
      {
     path: '',
-    component : LoginComponent
+    component : LoginComponent,
     // redirectTo: '/login',  // Redirect to login as the default route
-    // pathMatch: 'full',
+    pathMatch: 'full',
   },
         {
             path:'login',
