@@ -22,12 +22,13 @@ export class AdminDashboardComponent implements OnInit {
   users: User[] = [];
   editingUserId: number | null = null;
 
-  constructor(private fb: FormBuilder, private http: HttpClient,  private router: Router) {
+  constructor(private fb: FormBuilder, private http: HttpClient, private router: Router) {
     this.userForm = this.fb.group({
       username: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required], // Only used for creating new users
-      role: ['User', Validators.required]
+      password: [''], // Make optional, used for create only or password change when editing
+      role: ['User', Validators.required],
+      newPassword: [''] // <-- Add new control for changing password
     });
   }
 
@@ -61,12 +62,39 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  // onSubmit(): void {
+  //   const data = this.userForm.value;
+
+  //   this.getAuthHeaders((headers) => {
+  //     if (this.editingUserId) {
+  //       // Exclude password for update
+  //       const updateData = {
+  //         username: data.username,
+  //         email: data.email,
+  //         role: data.role
+  //       };
+
+  //       this.http.put(`http://localhost:5236/api/User/${this.editingUserId}`, updateData, { headers }).subscribe(() => {
+  //         this.fetchUsers();
+  //         this.resetForm();
+  //       });
+  //     } else {
+  //       this.http.post('http://localhost:5236/api/auth/register', data, { headers }).subscribe(() => {
+  //         this.fetchUsers();
+  //         this.resetForm();
+  //       });
+  //     }
+  //   });
+  // }
+
+
+
   onSubmit(): void {
     const data = this.userForm.value;
 
     this.getAuthHeaders((headers) => {
       if (this.editingUserId) {
-        // Exclude password for update
+        // Update user info except password
         const updateData = {
           username: data.username,
           email: data.email,
@@ -74,10 +102,30 @@ export class AdminDashboardComponent implements OnInit {
         };
 
         this.http.put(`http://localhost:5236/api/User/${this.editingUserId}`, updateData, { headers }).subscribe(() => {
-          this.fetchUsers();
-          this.resetForm();
+          // If newPassword field has value, update password
+          if (data.newPassword && data.newPassword.trim() !== '') {
+            this.http.put(
+              `http://localhost:5236/api/User/${this.editingUserId}/password`, // ✅ "User" with capital U
+              { newPassword: data.newPassword },
+              { headers }
+
+            ).subscribe({
+              next: () => {
+                this.fetchUsers();
+                this.resetForm();
+              },
+              error: (err) => {
+                console.error('Error updating password', err);
+                // Optionally show error message to user
+              }
+            });
+          } else {
+            this.fetchUsers();
+            this.resetForm();
+          }
         });
       } else {
+        // Creating new user (password required)
         this.http.post('http://localhost:5236/api/auth/register', data, { headers }).subscribe(() => {
           this.fetchUsers();
           this.resetForm();
@@ -91,7 +139,8 @@ export class AdminDashboardComponent implements OnInit {
     this.userForm.patchValue({
       username: user.username,
       email: user.email,
-      password: '', // reset password field
+      password: '',      // keep empty (create password not used on edit)
+      newPassword: '',   // reset new password field
       role: user.role
     });
   }
@@ -115,22 +164,22 @@ export class AdminDashboardComponent implements OnInit {
     this.userForm.reset({ role: 'User' });
   }
 
- viewUser(user: User): void {
-  this.router.navigate(['/user-details', user.id]);
-}
+  viewUser(user: User): void {
+    this.router.navigate(['/user-details', user.id]);
+  }
 
 
 
-get filteredUsers(): User[] {
-  if (!this.searchTerm) return this.users;
-  const term = this.searchTerm.toLowerCase();
-  return this.users.filter(user =>
-    user.username.toLowerCase().includes(term) ||
-    user.email.toLowerCase().includes(term) ||
-    user.role.toLowerCase().includes(term)
-  );
-}
+  get filteredUsers(): User[] {
+    if (!this.searchTerm) return this.users;
+    const term = this.searchTerm.toLowerCase();
+    return this.users.filter(user =>
+      user.username.toLowerCase().includes(term) ||
+      user.email.toLowerCase().includes(term) ||
+      user.role.toLowerCase().includes(term)
+    );
+  }
 
-  
+
 
 }

@@ -18,11 +18,9 @@ namespace Dotnet1
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Dotnet1.Models.Task>().HasData(
-                new Dotnet1.Models.Task { Id = 1, Name = "Task A" },
-                new Dotnet1.Models.Task { Id = 2, Name = "Task B" },
-                new Dotnet1.Models.Task { Id = 3, Name = "Break" },
-                new Dotnet1.Models.Task { Id = 4, Name = "Lunch" },
-                new Dotnet1.Models.Task { Id = 5, Name = "Day Off" }
+                new Dotnet1.Models.Task { Id = 1, Name = "Break" },
+                new Dotnet1.Models.Task { Id = 2, Name = "Lunch" },
+                new Dotnet1.Models.Task { Id = 3, Name = "Day Off" }
             );
 
             modelBuilder.Entity<TaskSession>()

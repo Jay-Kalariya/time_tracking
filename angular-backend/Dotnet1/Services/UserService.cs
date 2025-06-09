@@ -1,5 +1,6 @@
 using Dotnet1.Models;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
 
 namespace Dotnet1.Services
 {
@@ -12,12 +13,12 @@ namespace Dotnet1.Services
             _dbContext = dbContext;
         }
 
-        // Get all users
+        // Get all users (non-admin)
         public async Task<List<User>> GetAllUsersAsync()
         {
             return await _dbContext.Users
-      .Where(u => u.Role != "Admin")
-      .ToListAsync();
+                .Where(u => u.Role != "Admin")
+                .ToListAsync();
         }
 
         // Get user by ID
@@ -26,13 +27,12 @@ namespace Dotnet1.Services
             return await _dbContext.Users.FindAsync(id);
         }
 
-        // Update user info
+        // Update user info (excluding password)
         public async Task<User?> UpdateUserAsync(int id, User updatedUser)
         {
             var user = await _dbContext.Users.FindAsync(id);
             if (user == null) return null;
 
-            // Optionally: avoid overwriting password here
             user.Username = updatedUser.Username;
             user.Email = updatedUser.Email;
             user.Role = updatedUser.Role;
@@ -40,6 +40,19 @@ namespace Dotnet1.Services
             _dbContext.Users.Update(user);
             await _dbContext.SaveChangesAsync();
             return user;
+        }
+
+        // Update user password (new method)
+        public async Task<bool> UpdateUserPasswordAsync(int id, string newPassword)
+        {
+            var user = await _dbContext.Users.FindAsync(id);
+            if (user == null) return false;
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         // Delete user
@@ -53,13 +66,13 @@ namespace Dotnet1.Services
             return true;
         }
 
-        // Optional: check if user exists by email (for registration/login)
+        // Check if user exists by email (registration/login)
         public async Task<bool> UserExistsAsync(string email)
         {
             return await _dbContext.Users.AnyAsync(u => u.Email == email);
         }
 
-        // Optional: get user's role by ID
+        // Get user's role by ID
         public async Task<string?> GetUserRoleAsync(int id)
         {
             var user = await _dbContext.Users.FindAsync(id);

@@ -10,11 +10,21 @@
     <div class="form-row">
       <input formControlName="username" placeholder="Username" />
       <input formControlName="email" placeholder="Email" />
-      <input
-        formControlName="password"
-        [type]="editingUserId ? 'text' : 'password'"
-        placeholder="Password"
-        [required]="!editingUserId" />
+   <input
+  formControlName="password"
+  [type]="editingUserId ? 'text' : 'password'"
+  placeholder="Password"
+  [required]="!editingUserId"
+/>
+
+<!-- New input only visible when editing -->
+<div *ngIf="editingUserId">
+  <input
+    formControlName="newPassword"
+    type="password"
+    placeholder="New Password (optional)"
+  />
+</div>
       <select formControlName="role">
         <option value="User">User</option>
         <option value="Admin">Admin</option>
