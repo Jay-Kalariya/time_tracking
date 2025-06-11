@@ -6,6 +6,9 @@ import { UserDashboardComponent } from './userdeshbaord/userdeshbaord.component'
 import  {LoginComponent}  from './login/login.component';
 import { UserDetailsComponent } from './user-details/user-details.component';
 import { UserHistoryComponent } from './user-history/user-history.component';
+import { AdminTaskComponent } from './admintask/admintask.component';
+import { Component } from '@angular/core';
+import { AdmintaskviewComponent } from './admintaskview/admintaskview.component';
 
 
 
@@ -45,6 +48,16 @@ export const routes: Routes = [
         {
             path:"user-history",
             component:UserHistoryComponent
+        },
+
+        {
+            path: 'admintask',
+            component:AdminTaskComponent
+        },
+
+        {
+            path: 'admintaskview',
+            component:AdmintaskviewComponent
         }
        
 ];

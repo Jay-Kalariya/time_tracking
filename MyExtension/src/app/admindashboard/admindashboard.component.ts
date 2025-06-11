@@ -181,5 +181,13 @@ export class AdminDashboardComponent implements OnInit {
   }
 
 
+  goadmintask(){
+    this.router.navigate(['/admintask']);
+  }
+
+  goviewtask(){
+      this.router.navigate(['/admintaskview'])
+  }
+
 
 }

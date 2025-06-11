@@ -41,6 +41,16 @@ getUserHistoryTask(): Observable<TaskSessionDto[]> {
   return this.http.get<TaskSessionDto[]>(`${this.apiUrl}/history`);
 }
 
-
-
+getAllTasks(): Observable<any[]> {
+  return this.http.get<any[]>(this.apiUrl); // ✅ No `/task` at the end
 }
+
+getAssignedTasks(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/assigned`);
+}
+
+getTasksForDashboard(): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/dashboard-tasks`);
+}
+}
+

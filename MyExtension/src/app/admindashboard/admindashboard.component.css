@@ -27,6 +27,13 @@ h2 {
   margin-bottom: 40px;
 }
 
+
+.center-1{
+  display:  flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .form-row {
   display: flex;
   flex-wrap: wrap;

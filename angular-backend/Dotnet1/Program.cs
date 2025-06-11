@@ -24,6 +24,7 @@ builder.Services.AddDbContext<TimeTrackingContext>(options =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TaskService>();
+builder.Services.AddScoped<AdminTaskService>();
 
 // Enable controllers
 builder.Services.AddControllers();

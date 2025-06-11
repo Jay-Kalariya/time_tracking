@@ -69,22 +69,95 @@ namespace Dotnet1.Controllers
             return Ok(history);
         }
 
-   [HttpGet("admin/history/{userId}")]
-[Authorize(Roles = "Admin")]
-public async Task<IActionResult> GetUserTaskHistory(int userId)
+        [HttpGet("admin/history/{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetUserTaskHistory(int userId)
+        {
+            try
+            {
+                var history = await _taskService.GetTaskHistoryAsync(userId);
+                return Ok(history);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Failed to fetch task history for user {userId}: {ex}");
+                return StatusCode(500, new { message = "Failed to get task history", error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllTasks()
+        {
+            var tasks = await _taskService.GetAllTasksAsync();
+            return Ok(tasks);
+        }
+
+
+        [HttpGet("assignments")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllTaskAssignments()
+        {
+            try
+            {
+                var assignments = await _taskService.GetAllTaskAssignmentsAsync();
+                return Ok(assignments.Select(a => new
+                {
+                    TaskId = a.TaskId,
+                    TaskName = a.TaskName,
+                    UserId = a.UserId,
+                    UserName = a.UserName
+                }));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to get assignments", error = ex.Message });
+            }
+        }
+
+        [HttpPost("assign/{taskId:int}/{userId:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignTaskToUser(int taskId, int userId)
+        {
+            var result = await _taskService.AssignTaskToUserAsync(taskId, userId);
+            if (result)
+                return Ok(new { message = "Task assigned successfully." });
+
+            return BadRequest(new { message = "Task already assigned." });
+        }
+
+        [HttpDelete("unassign/{taskId:int}/{userId:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UnassignTaskFromUser(int taskId, int userId)
+        {
+            var result = await _taskService.UnassignTaskFromUserAsync(taskId, userId);
+            if (result)
+                return Ok(new { message = "Task unassigned successfully." });
+
+            return NotFound(new { message = "Task assignment not found." });
+        }
+
+
+        [HttpGet("assigned")]
+        public async Task<IActionResult> GetAssignedTasksForUser()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var tasks = await _taskService.GetAssignedTasksAsync(userId);
+            return Ok(tasks);
+        }
+
+
+
+[HttpGet("dashboard-tasks")]
+public async Task<IActionResult> GetTasksForDashboard()
 {
-    try
-    {
-        var history = await _taskService.GetTaskHistoryAsync(userId);
-        return Ok(history);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[ERROR] Failed to fetch task history for user {userId}: {ex}");
-        return StatusCode(500, new { message = "Failed to get task history", error = ex.Message });
-    }
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+    var tasks = await _taskService.GetTasksForUserDashboardAsync(userId);
+    return Ok(tasks);
 }
 
-
     }
+
+
+
+
 }

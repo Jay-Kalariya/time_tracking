@@ -1,0 +1,58 @@
+<div class="task-container">
+  <h2>All Tasks</h2>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading">
+    Loading tasks...
+  </div>
+
+  <!-- Edit Task Form -->
+  <div *ngIf="editingTaskId !== null" class="edit-task-form">
+    <h3>Edit Task</h3>
+    <form [formGroup]="taskForm" (ngSubmit)="updateTask()">
+      <input
+        type="text"
+        formControlName="name"
+        placeholder="Enter task name"
+        class="edit-input"
+        required
+      />
+      <button type="submit" class="btn btn-save">Save</button>
+      <button type="button" class="btn btn-cancel" (click)="cancelEdit()">Cancel</button>
+    </form>
+  </div>
+
+  <!-- Task Table -->
+  <table class="task-table" *ngIf="!isLoading">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Actions</th>
+        <th>Assigned Users</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let task of tasks">
+        <td>{{ task.id }}</td>
+        <td>{{ task.name }}</td>
+        <td>
+          <button class="btn btn-edit" (click)="editTask(task)">Edit</button>
+          <button class="btn btn-delete" (click)="deleteTask(task.id)">Delete</button>
+        </td>
+        <td>
+          <select (change)="onUserSelect($event, task.id)" class="user-select">
+            <option value="">Select User</option>
+            <option *ngFor="let user of users" [value]="user.id">{{ user.username }}</option>
+          </select>
+          <div class="assigned-users">
+            <span *ngFor="let user of task.assignedUsers" class="user-badge">
+              {{ user.username }}
+              <button (click)="unassignTask(task.id, user.id)" class="unassign-btn">×</button>
+            </span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -2,10 +2,12 @@
   <h2>Admin Dashboard</h2>
 
   <div class="task-buttons">
-    <button class="btn primary">Create Task</button>
-    <button class="btn secondary">View All Tasks</button>
+    <button class="btn primary" (click)="goadmintask()">Create Task</button>
+    <button class="btn secondary" (click)="goviewtask()">View All Tasks</button>
   </div>
 
+
+    <div class="center-1"><h2>Create User</h2></div>
   <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
     <div class="form-row">
       <input formControlName="username" placeholder="Username" />
