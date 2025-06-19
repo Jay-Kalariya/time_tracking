@@ -6,75 +6,96 @@ namespace Dotnet1.Services
 {
     public class TaskService
     {
-        private readonly TimeTrackingContext _dbContext;
+        private readonly TimeTrackingContext _context;
 
-        public TaskService(TimeTrackingContext dbContext)
+        public TaskService(TimeTrackingContext context)
         {
-            _dbContext = dbContext;
+            _context = context;
         }
 
-        public async Task<List<Dotnet1.Models.Task>> GetAllTasksAsync()
+        public async Task<List<Models.Task>> GetAllTasksAsync()
         {
-            return await _dbContext.Tasks.ToListAsync();
+            return await _context.Tasks.ToListAsync();
         }
 
-
-        private DateTime GetIndianTime()
+        public async Task<bool> UserExistsAsync(int userId)
         {
-            TimeZoneInfo istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, istZone);
+            return await _context.Users.AnyAsync(u => u.Id == userId);
         }
 
-        public async Task<TaskSession> StartTaskAsync(int userId, int taskId)
+   public async Task<TaskSession> StartTaskAsync(int userId, int taskId)
+{
+    // ✅ Get current active session
+    var activeSession = await _context.TaskSessions
+        .FirstOrDefaultAsync(t => t.UserId == userId && t.EndTime == null);
+
+    if (activeSession != null)
+    {
+        if (activeSession.TaskId == taskId)
         {
-            var active = await _dbContext.TaskSessions
-                .FirstOrDefaultAsync(t => t.UserId == userId && t.EndTime == null);
-
-            var newTask = await _dbContext.Tasks.FindAsync(taskId);
-
-            if (active != null)
-            {
-                if (new[] { "Day Off", "Lunch", "Break" }.Contains(newTask?.Name))
-                    throw new InvalidOperationException("Please end your current task before starting a break or day off.");
-
-                active.EndTime = GetIndianTime();
-                await _dbContext.SaveChangesAsync();
-            }
-
-            var newSession = new TaskSession
-            {
-                UserId = userId,
-                TaskId = taskId,
-                StartTime = GetIndianTime(),
-                EndTime = null
-            };
-
-            _dbContext.TaskSessions.Add(newSession);
-            await _dbContext.SaveChangesAsync();
-            return newSession;
+            // 🚫 Already working on this task – just return current session
+            return activeSession;
         }
+
+        // ✅ End current active session (different task)
+        activeSession.EndTime = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+    }
+
+    // 🔄 Check if last session of this task ended within 5 min (allow resume)
+    var lastSession = await _context.TaskSessions
+        .Where(t => t.UserId == userId && t.TaskId == taskId && t.EndTime != null)
+        .OrderByDescending(t => t.EndTime)
+        .FirstOrDefaultAsync();
+
+    if (lastSession != null)
+    {
+        var timeSinceEnd = DateTime.UtcNow - lastSession.EndTime.Value;
+
+        if (timeSinceEnd.TotalMinutes <= 5)
+        {
+            lastSession.EndTime = null; // ✅ Resume session
+            await _context.SaveChangesAsync();
+            return lastSession;
+        }
+    }
+
+    // 🆕 Start new session
+    var newSession = new TaskSession
+    {
+        UserId = userId,
+        TaskId = taskId,
+        StartTime = DateTime.UtcNow,
+        EndTime = null
+    };
+
+    _context.TaskSessions.Add(newSession);
+    await _context.SaveChangesAsync();
+    return newSession;
+}
+
 
         public async Task<bool> EndCurrentTaskAsync(int userId)
         {
-            var active = await _dbContext.TaskSessions
+            var active = await _context.TaskSessions
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.EndTime == null);
 
             if (active == null) return false;
 
-            active.EndTime = GetIndianTime();
-            await _dbContext.SaveChangesAsync();
+            active.EndTime = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
             return true;
         }
 
         public async Task<TaskSession> GoOnBreakAsync(int userId, string breakType)
         {
-            var active = await _dbContext.TaskSessions
+            var active = await _context.TaskSessions
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.EndTime == null);
 
             if (active != null)
                 throw new InvalidOperationException("Please end your current task before starting a break.");
 
-            var breakTask = await _dbContext.Tasks.FirstOrDefaultAsync(t => t.Name == breakType);
+            var breakTask = await _context.Tasks.FirstOrDefaultAsync(t => t.Name == breakType);
             if (breakTask == null)
                 throw new ArgumentException("Invalid break type");
 
@@ -82,110 +103,57 @@ namespace Dotnet1.Services
             {
                 UserId = userId,
                 TaskId = breakTask.Id,
-                StartTime = GetIndianTime(),
+                StartTime = DateTime.UtcNow,
                 EndTime = null
             };
 
-            _dbContext.TaskSessions.Add(breakSession);
-            await _dbContext.SaveChangesAsync();
+            _context.TaskSessions.Add(breakSession);
+            await _context.SaveChangesAsync();
             return breakSession;
         }
-
         public async Task<List<TaskSessionDto>> GetTaskHistoryAsync(int userId)
         {
-            var sessions = await _dbContext.TaskSessions
-                .Where(t => t.UserId == userId)
-                .Include(t => t.Task)
-                .OrderByDescending(t => t.StartTime)
-                .ToListAsync();
-
-            // Compute duration after fetching
-            return sessions.Select(t => new TaskSessionDto
+            try
             {
-                Id = t.Id,
-                TaskId = t.TaskId,
-                TaskName = t.Task?.Name ?? "Unknown",
-                StartTime = t.StartTime,
-                EndTime = t.EndTime,
-                Duration = t.EndTime.HasValue ? (t.EndTime.Value - t.StartTime).TotalSeconds : 0
-            }).ToList();
-        }
+                var sessions = await _context.TaskSessions
+                    .Where(t => t.UserId == userId)
+                    .Include(t => t.Task)
+                    .OrderByDescending(t => t.StartTime)
+                    .ToListAsync();
 
+                // Now map to DTOs in memory
+                var history = sessions.Select(t => new TaskSessionDto
+                {
+                    Id = t.Id,
+                    TaskId = t.TaskId,
+                    TaskName = t.Task != null ? t.Task.Name : "Unknown Task",
+                    StartTime = t.StartTime,
+                    EndTime = t.EndTime,
+                    Duration = t.EndTime.HasValue ? (t.EndTime.Value - t.StartTime).TotalSeconds : 0
+                }).ToList();
 
-        // Assign
-        public async Task<bool> AssignTaskToUserAsync(int taskId, int userId)
-        {
-            var exists = await _dbContext.TaskAssignments.AnyAsync(x => x.TaskId == taskId && x.UserId == userId);
-            if (!exists)
-            {
-                _dbContext.TaskAssignments.Add(new TaskAssignment { TaskId = taskId, UserId = userId });
-                await _dbContext.SaveChangesAsync();
-                return true;
+                return history;
             }
-            return false;
-        }
-
-        // Unassign
-        public async Task<bool> UnassignTaskFromUserAsync(int taskId, int userId)
-        {
-            var assignment = await _dbContext.TaskAssignments
-                .FirstOrDefaultAsync(x => x.TaskId == taskId && x.UserId == userId);
-
-            if (assignment != null)
+            catch (Exception ex)
             {
-                _dbContext.TaskAssignments.Remove(assignment);
-                await _dbContext.SaveChangesAsync();
-                return true;
+                Console.WriteLine($"[ERROR] GetTaskHistoryAsync: {ex}");
+                throw;
             }
-            return false;
         }
 
-        // Get assigned tasks for a user
-        public async Task<List<Models.Task>> GetAssignedTasksAsync(int userId)
+        public async Task<List<Models.Task>> GetTasksForUserDashboardAsync(int userId)
         {
-            return await _dbContext.TaskAssignments
+            var assignedTasks = await _context.TaskAssignments
                 .Where(a => a.UserId == userId)
                 .Include(a => a.Task)
                 .Select(a => a.Task)
                 .ToListAsync();
+
+            var defaultTasks = await _context.Tasks
+                .Where(t => t.Name == "Lunch" || t.Name == "Break" || t.Name == "Day Off")
+                .ToListAsync();
+
+            return assignedTasks.Union(defaultTasks).ToList();
         }
-
-        // Admin: Get all task assignments
-        public async Task<List<(int UserId, string UserName, int TaskId, string TaskName)>> GetAllTaskAssignmentsAsync()
-        {
-            return await _dbContext.TaskAssignments
-             .Include(a => a.Task)
-             .Include(a => a.User) // Include User to avoid null
-             .Select(a => new ValueTuple<int, string, int, string>(
-                 a.UserId,
-                 a.User.Username,  // <-- this will now work
-                 a.TaskId,
-                 a.Task.Name
-             ))
-             .ToListAsync();
-
-        }
-
-
-public async Task<List<Models.Task>> GetTasksForUserDashboardAsync(int userId)
-{
-    // Get assigned tasks
-    var assignedTasks = await _dbContext.TaskAssignments
-        .Where(a => a.UserId == userId)
-        .Include(a => a.Task)
-        .Select(a => a.Task)
-        .ToListAsync();
-
-    // Get the three default tasks
-    var defaultTasks = await _dbContext.Tasks
-        .Where(t => t.Name == "Lunch" || t.Name == "Break" || t.Name == "Day Off")
-        .ToListAsync();
-
-    // Combine and remove duplicates
-    var allTasks = assignedTasks.Union(defaultTasks).ToList();
-    return allTasks;
-}
-
-
     }
 }

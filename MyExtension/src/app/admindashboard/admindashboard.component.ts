@@ -189,5 +189,9 @@ export class AdminDashboardComponent implements OnInit {
       this.router.navigate(['/admintaskview'])
   }
 
+  goproject(){
+    this.router.navigate(["/project"])
+  }
+
 
 }

@@ -34,16 +34,19 @@ export class UserDashboardComponent implements OnInit, OnDestroy {
     setInterval(() => this.updateCurrentISTTime(), 1000);
   }
 
-loadDashboardTasks() {
-  this.taskService.getTasksForDashboard().subscribe({
-    next: (res) => {
-      this.tasks = res;
-    },
-    error: () => {
-      alert('Failed to load tasks');
-    }
-  });
-}
+ loadDashboardTasks() {
+    this.taskService.getTasksForDashboard().subscribe({
+      next: (res) => {
+        this.tasks = res;
+        console.log('Loaded tasks:', this.tasks); // Debug log
+      },
+      error: (err) => {
+        console.error('Error loading tasks:', err);
+        alert('Failed to load tasks');
+      }
+    });
+  }
+
   ngOnDestroy(): void {
     this.stopTimer();
   }
@@ -127,24 +130,35 @@ loadDashboardTasks() {
   }
 
   pushTask() {
-    this.taskService.endTask().subscribe({
-      next: () => {
-        alert('Task pushed!');
-        this.stopTimer();
-        this.resumeSeconds = this.seconds;
-        this.showStartButton = true;
-        this.selectedTask = null;
-        this.nonWorkingPeriodActive = false;
-      },
-      error: () => alert('Failed to push the task.')
-    });
-  }
+  this.taskService.endTask().subscribe({
+    next: () => {
+      alert('Task pushed!');
+      this.stopTimer();
 
-  resumeTask() {
-    this.seconds = this.resumeSeconds;
-    this.startTimer();
-    this.showStartButton = false;
-  }
+      this.resumeSeconds = this.seconds;
+      this.showStartButton = true;
+
+      // ❌ Don't clear selectedTask — keep it so "Start" shows
+      // ✅ This will allow Start button to appear for the same task
+      // this.selectedTask = null;
+
+      this.nonWorkingPeriodActive = false;
+    },
+    error: () => alert('Failed to push the task.')
+  });
+}
+ resumeTask() {
+  if (!this.selectedTask) return;
+
+  this.taskService.startTask(this.selectedTask.id).subscribe({
+    next: () => {
+      this.seconds = this.resumeSeconds;
+      this.startTimer();
+      this.showStartButton = false;
+    },
+    error: () => alert('Failed to resume task.')
+  });
+}
 
   stopCurrentBreak() {
     if (this.selectedTask && ['Lunch', 'Break', 'Day Off'].includes(this.selectedTask.name)) {
@@ -184,23 +198,24 @@ loadDashboardTasks() {
     });
   }
 
-  stopTask() {
-    if (this.selectedTask) {
-      this.taskService.endTask().subscribe({
-        next: () => {
-          alert('Task stopped and saved.');
-          this.stopTimer();
-          this.seconds = 0;
-          this.selectedTask = null;
-          this.showStartButton = false;
-          this.nonWorkingPeriodActive = false;
-        },
-        error: () => alert('Failed to stop task.')
-      });
-    } else {
-      alert('No active task.');
-    }
+ stopTask() {
+  if (this.selectedTask) {
+    this.taskService.endTask().subscribe({
+      next: () => {
+        alert('Task stopped and saved.');
+        this.stopTimer();
+        this.seconds = 0;
+        this.selectedTask = null;
+        this.showStartButton = false;
+        this.nonWorkingPeriodActive = false;
+      },
+      error: () => alert('Failed to stop task.')
+    });
+  } else {
+    alert('No active task.');
   }
+}
+
 
   formatTime(): string {
     const h = Math.floor(this.seconds / 3600);

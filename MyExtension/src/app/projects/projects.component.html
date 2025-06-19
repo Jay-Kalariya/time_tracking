@@ -1,0 +1,42 @@
+<div class="container">
+  <h2>{{ selectedProject ? 'Update Project' : 'Create Project' }}</h2>
+  <form [formGroup]="projectForm" (ngSubmit)="createOrUpdateProject()" class="form">
+    <input formControlName="name" placeholder="Project Name" />
+    <div class="btn-group">
+      <button type="submit">{{ selectedProject ? 'Update' : 'Create' }}</button>
+      <button type="button" *ngIf="selectedProject" (click)="cancelEdit()" class="cancel-btn">Cancel</button>
+    </div>
+  </form>
+
+  <p class="success" *ngIf="message">{{ message }}</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+
+  <h2>All Projects</h2>
+  <div class="card" *ngFor="let project of projects">
+    <div class="card-header">
+      <h3>{{ project.name }}</h3>
+      <div class="action-buttons">
+        <button (click)="selectProjectForEdit(project)">✏️ Edit</button>
+        <button (click)="deleteProject(project.id!)" class="delete-btn">🗑 Delete</button>
+      </div>
+    </div>
+    <ul>
+      <li *ngFor="let task of project.tasks">{{ task.name }}</li>
+    </ul>
+  </div>
+
+  <h3>Assign Task to Project</h3>
+  <div class="form">
+    <select [(ngModel)]="selectedTaskId" name="taskId">
+      <option [value]="null" disabled selected>Select Task</option>
+      <option *ngFor="let task of tasks" [value]="task.id">{{ task.name }}</option>
+    </select>
+
+    <select [(ngModel)]="selectedProjectIdForAssignment" name="projectId">
+      <option [value]="null" disabled selected>Select Project</option>
+      <option *ngFor="let project of projects" [value]="project.id">{{ project.name }}</option>
+    </select>
+
+    <button (click)="assignTaskToProject()">Assign</button>
+  </div>
+</div>

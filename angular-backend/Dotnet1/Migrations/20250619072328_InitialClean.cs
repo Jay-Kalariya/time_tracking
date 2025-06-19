@@ -5,7 +5,7 @@
 namespace Dotnet1.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedInitialTasks : Migration
+    public partial class InitialClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

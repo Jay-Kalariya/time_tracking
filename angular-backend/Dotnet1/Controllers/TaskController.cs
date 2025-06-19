@@ -13,10 +13,12 @@ namespace Dotnet1.Controllers
     public class TaskController : ControllerBase
     {
         private readonly TaskService _taskService;
+        private readonly AdminTaskService _adminTaskService;
 
-        public TaskController(TaskService taskService)
+        public TaskController(TaskService taskService, AdminTaskService adminTaskService)
         {
             _taskService = taskService;
+            _adminTaskService = adminTaskService;
         }
 
         [HttpPost("start")]
@@ -40,10 +42,8 @@ namespace Dotnet1.Controllers
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var success = await _taskService.EndCurrentTaskAsync(userId);
-            if (!success)
-                return NotFound("No active task session found.");
-
-            return Ok(new { message = "Task ended successfully." });
+            return success ? Ok(new { message = "Task ended successfully." })
+                         : NotFound("No active task session found.");
         }
 
         [HttpPost("break")]
@@ -75,89 +75,56 @@ namespace Dotnet1.Controllers
         {
             try
             {
+                // Verify user exists
+                if (!await _taskService.UserExistsAsync(userId))
+                {
+                    return NotFound(new { message = $"User with ID {userId} not found" });
+                }
+
                 var history = await _taskService.GetTaskHistoryAsync(userId);
+
+                if (!history.Any())
+                {
+                    return Ok(new
+                    {
+                        message = "No task history found for this user",
+                        data = history
+                    });
+                }
+
                 return Ok(history);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ERROR] Failed to fetch task history for user {userId}: {ex}");
-                return StatusCode(500, new { message = "Failed to get task history", error = ex.Message });
+                Console.WriteLine($"[ERROR] GetUserTaskHistory: {ex}");
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while fetching task history",
+                    error = ex.Message
+                });
             }
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllTasks()
         {
-            var tasks = await _taskService.GetAllTasksAsync();
-            return Ok(tasks);
-        }
-
-
-        [HttpGet("assignments")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAllTaskAssignments()
-        {
             try
             {
-                var assignments = await _taskService.GetAllTaskAssignmentsAsync();
-                return Ok(assignments.Select(a => new
-                {
-                    TaskId = a.TaskId,
-                    TaskName = a.TaskName,
-                    UserId = a.UserId,
-                    UserName = a.UserName
-                }));
+                var tasks = await _taskService.GetAllTasksAsync();
+                return Ok(tasks);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Failed to get assignments", error = ex.Message });
+                return StatusCode(500, new { message = "Failed to get tasks", error = ex.Message });
             }
         }
 
-        [HttpPost("assign/{taskId:int}/{userId:int}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AssignTaskToUser(int taskId, int userId)
-        {
-            var result = await _taskService.AssignTaskToUserAsync(taskId, userId);
-            if (result)
-                return Ok(new { message = "Task assigned successfully." });
-
-            return BadRequest(new { message = "Task already assigned." });
-        }
-
-        [HttpDelete("unassign/{taskId:int}/{userId:int}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UnassignTaskFromUser(int taskId, int userId)
-        {
-            var result = await _taskService.UnassignTaskFromUserAsync(taskId, userId);
-            if (result)
-                return Ok(new { message = "Task unassigned successfully." });
-
-            return NotFound(new { message = "Task assignment not found." });
-        }
-
-
-        [HttpGet("assigned")]
-        public async Task<IActionResult> GetAssignedTasksForUser()
+        [HttpGet("dashboard-tasks")]
+        public async Task<IActionResult> GetTasksForDashboard()
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var tasks = await _taskService.GetAssignedTasksAsync(userId);
+            var tasks = await _taskService.GetTasksForUserDashboardAsync(userId);
             return Ok(tasks);
         }
-
-
-
-[HttpGet("dashboard-tasks")]
-public async Task<IActionResult> GetTasksForDashboard()
-{
-    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-    var tasks = await _taskService.GetTasksForUserDashboardAsync(userId);
-    return Ok(tasks);
-}
-
     }
-
-
-
-
 }

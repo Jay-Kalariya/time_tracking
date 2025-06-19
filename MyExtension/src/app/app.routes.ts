@@ -9,6 +9,7 @@ import { UserHistoryComponent } from './user-history/user-history.component';
 import { AdminTaskComponent } from './admintask/admintask.component';
 import { Component } from '@angular/core';
 import { AdmintaskviewComponent } from './admintaskview/admintaskview.component';
+import { ProjectComponent } from './projects/projects.component';
 
 
 
@@ -58,6 +59,11 @@ export const routes: Routes = [
         {
             path: 'admintaskview',
             component:AdmintaskviewComponent
+        },
+
+        {
+            path:"project",
+            component:ProjectComponent
         }
        
 ];

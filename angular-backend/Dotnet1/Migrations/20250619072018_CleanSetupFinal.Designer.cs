@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dotnet1.Migrations
 {
     [DbContext(typeof(TimeTrackingContext))]
-    [Migration("20250609050030_UpdateSeededTasks")]
-    partial class UpdateSeededTasks
+    [Migration("20250619072018_CleanSetupFinal")]
+    partial class CleanSetupFinal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,26 @@ namespace Dotnet1.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Dotnet1.Models.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Projects");
+                });
+
             modelBuilder.Entity("Dotnet1.Models.Task", b =>
                 {
                     b.Property<int>("Id")
@@ -33,11 +53,19 @@ namespace Dotnet1.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("IsProtected")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("Tasks");
 
@@ -45,28 +73,59 @@ namespace Dotnet1.Migrations
                         new
                         {
                             Id = 1,
+                            IsProtected = false,
                             Name = "Task A"
                         },
                         new
                         {
                             Id = 2,
+                            IsProtected = false,
                             Name = "Task B"
                         },
                         new
                         {
                             Id = 3,
+                            IsProtected = true,
                             Name = "Break"
                         },
                         new
                         {
                             Id = 4,
+                            IsProtected = true,
                             Name = "Lunch"
                         },
                         new
                         {
                             Id = 5,
+                            IsProtected = true,
                             Name = "Day Off"
                         });
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.TaskAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsAssigned")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TaskAssignments");
                 });
 
             modelBuilder.Entity("Dotnet1.Models.TaskSession", b =>
@@ -150,25 +209,73 @@ namespace Dotnet1.Migrations
                     b.ToTable("UserTokens");
                 });
 
+            modelBuilder.Entity("Dotnet1.Models.Task", b =>
+                {
+                    b.HasOne("Dotnet1.Models.Project", "Project")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Task_Project");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.TaskAssignment", b =>
+                {
+                    b.HasOne("Dotnet1.Models.Task", "Task")
+                        .WithMany("TaskAssignments")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskAssignment_Task");
+
+                    b.HasOne("Dotnet1.Models.User", "User")
+                        .WithMany("TaskAssignments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskAssignment_User");
+
+                    b.Navigation("Task");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Dotnet1.Models.TaskSession", b =>
                 {
                     b.HasOne("Dotnet1.Models.Task", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskSession_Task");
 
-                    b.HasOne("Dotnet1.Models.User", null)
+                    b.HasOne("Dotnet1.Models.User", "User")
                         .WithMany("TaskSessions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskSession_User");
 
                     b.Navigation("Task");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.Project", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.Task", b =>
+                {
+                    b.Navigation("TaskAssignments");
                 });
 
             modelBuilder.Entity("Dotnet1.Models.User", b =>
                 {
+                    b.Navigation("TaskAssignments");
+
                     b.Navigation("TaskSessions");
                 });
 #pragma warning restore 612, 618

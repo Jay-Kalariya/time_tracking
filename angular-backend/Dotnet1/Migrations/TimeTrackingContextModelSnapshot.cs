@@ -22,6 +22,26 @@ namespace Dotnet1.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("Dotnet1.Models.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Projects");
+                });
+
             modelBuilder.Entity("Dotnet1.Models.Task", b =>
                 {
                     b.Property<int>("Id")
@@ -37,7 +57,12 @@ namespace Dotnet1.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("Tasks");
 
@@ -81,6 +106,9 @@ namespace Dotnet1.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsAssigned")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
@@ -178,19 +206,32 @@ namespace Dotnet1.Migrations
                     b.ToTable("UserTokens");
                 });
 
+            modelBuilder.Entity("Dotnet1.Models.Task", b =>
+                {
+                    b.HasOne("Dotnet1.Models.Project", "Project")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Task_Project");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Dotnet1.Models.TaskAssignment", b =>
                 {
                     b.HasOne("Dotnet1.Models.Task", "Task")
-                        .WithMany()
+                        .WithMany("TaskAssignments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskAssignment_Task");
 
                     b.HasOne("Dotnet1.Models.User", "User")
-                        .WithMany()
+                        .WithMany("TaskAssignments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskAssignment_User");
 
                     b.Navigation("Task");
 
@@ -203,19 +244,35 @@ namespace Dotnet1.Migrations
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskSession_Task");
 
-                    b.HasOne("Dotnet1.Models.User", null)
+                    b.HasOne("Dotnet1.Models.User", "User")
                         .WithMany("TaskSessions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_TaskSession_User");
 
                     b.Navigation("Task");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.Project", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Dotnet1.Models.Task", b =>
+                {
+                    b.Navigation("TaskAssignments");
                 });
 
             modelBuilder.Entity("Dotnet1.Models.User", b =>
                 {
+                    b.Navigation("TaskAssignments");
+
                     b.Navigation("TaskSessions");
                 });
 #pragma warning restore 612, 618

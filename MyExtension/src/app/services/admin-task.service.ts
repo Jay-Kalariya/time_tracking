@@ -19,7 +19,7 @@ export interface TaskAssignmentDto {
 
 @Injectable({ providedIn: 'root' })
 export class AdminTaskService {
-  private apiUrl = 'http://localhost:5236/api/Task';
+  private apiUrl = 'http://localhost:5236/api/AdminTask';
 
   constructor(private http: HttpClient) {}
 
@@ -43,15 +43,19 @@ export class AdminTaskService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  assignTaskToUser(taskId: number, userId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/assign/${taskId}/${userId}`, {});
+  assignTask(dto: TaskAssignmentDto): Observable<TaskAssignmentDto> {
+    return this.http.post<TaskAssignmentDto>(`${this.apiUrl}/assign`, dto);
   }
 
-  unassignTaskFromUser(taskId: number, userId: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/unassign/${taskId}/${userId}`);
+  unassignTask(taskId: number, userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/unassign/${taskId}/${userId}`);
   }
 
   getAllAssignments(): Observable<TaskAssignmentDto[]> {
     return this.http.get<TaskAssignmentDto[]>(`${this.apiUrl}/assignments`);
+  }
+
+  getTasksForUser(userId: number): Observable<Task[]> {
+    return this.http.get<Task[]>(`${this.apiUrl}/user/${userId}`);
   }
 }

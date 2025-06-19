@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { AdminTaskService, Task, TaskAssignmentDto } from '../services/admin-task.service';
 import { UserService } from '../services/user.service';
-import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { User } from '../modals/user.modals';
+
 @Component({
   selector: 'app-admintaskview',
   standalone: true,
@@ -12,7 +13,7 @@ import { User } from '../modals/user.modals';
   styleUrls: ['./admintaskview.component.css']
 })
 export class AdmintaskviewComponent implements OnInit {
-  tasks: Task[] = [];
+  tasks: (Task & { assignedUsers: User[] })[] = [];
   users: User[] = [];
   taskForm: FormGroup;
   editingTaskId: number | null = null;
@@ -24,7 +25,7 @@ export class AdmintaskviewComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.taskForm = this.fb.group({
-      name: ['', { nonNullable: true }]
+      name: ['']
     });
   }
 
@@ -53,7 +54,10 @@ export class AdmintaskviewComponent implements OnInit {
         this.tasks = tasks.filter(task =>
           !task.isProtected &&
           !['break', 'lunch', 'day off'].includes(task.name.toLowerCase())
-        );
+        ).map(task => ({
+          ...task,
+          assignedUsers: []
+        }));
         this.loadAssignments();
       },
       error: (err) => {
@@ -66,22 +70,14 @@ export class AdmintaskviewComponent implements OnInit {
   loadAssignments(): void {
     this.taskService.getAllAssignments().subscribe({
       next: (assignments) => {
-        const assignmentsMap = new Map<number, User[]>();
-        
         assignments.forEach(assignment => {
-          if (!assignmentsMap.has(assignment.taskId)) {
-            assignmentsMap.set(assignment.taskId, []);
-          }
+          const task = this.tasks.find(t => t.id === assignment.taskId);
           const user = this.users.find(u => u.id === assignment.userId);
-          if (user) {
-            assignmentsMap.get(assignment.taskId)!.push(user);
+          
+          if (task && user && !task.assignedUsers.some(u => u.id === user.id)) {
+            task.assignedUsers.push(user);
           }
         });
-
-        this.tasks = this.tasks.map(task => ({
-          ...task,
-          assignedUsers: assignmentsMap.get(task.id) || []
-        }));
         this.isLoading = false;
       },
       error: (err) => {
@@ -131,7 +127,7 @@ export class AdmintaskviewComponent implements OnInit {
   onUserSelect(event: Event, taskId: number): void {
     const userId = Number((event.target as HTMLSelectElement).value);
     if (!isNaN(userId)) {
-      this.taskService.assignTaskToUser(taskId, userId).subscribe({
+      this.taskService.assignTask({ taskId, userId }).subscribe({
         next: () => {
           this.loadAssignments();
           (event.target as HTMLSelectElement).value = '';
@@ -142,7 +138,7 @@ export class AdmintaskviewComponent implements OnInit {
   }
 
   unassignTask(taskId: number, userId: number): void {
-    this.taskService.unassignTaskFromUser(taskId, userId).subscribe({
+    this.taskService.unassignTask(taskId, userId).subscribe({
       next: () => this.loadAssignments(),
       error: () => alert('Failed to unassign task')
     });

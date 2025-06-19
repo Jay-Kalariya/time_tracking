@@ -1,45 +1,71 @@
-using Dotnet1.Models;
 using Microsoft.EntityFrameworkCore;
+using Dotnet1.Models;
+using TaskModel = Dotnet1.Models.Task;
 
 namespace Dotnet1
 {
     public class TimeTrackingContext : DbContext
     {
         public DbSet<User> Users => Set<User>();
-        public DbSet<Dotnet1.Models.Task> Tasks => Set<Dotnet1.Models.Task>();
+        public DbSet<TaskModel> Tasks => Set<TaskModel>();
         public DbSet<TaskSession> TaskSessions => Set<TaskSession>();
         public DbSet<UserToken> UserTokens => Set<UserToken>();
-
-        public DbSet<TaskAssignment> TaskAssignments { get; set; }
-
+        public DbSet<Project> Projects => Set<Project>();
+        public DbSet<TaskAssignment> TaskAssignments => Set<TaskAssignment>();
 
         public TimeTrackingContext(DbContextOptions<TimeTrackingContext> options)
-            : base(options)
-        {
-        }
+            : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // modelBuilder.Entity<Dotnet1.Models.Task>().HasData(
-            //     new Dotnet1.Models.Task { Id = 1, Name = "Task A" },
-            //     new Dotnet1.Models.Task { Id = 2, Name = "Task B" },
-            //     new Dotnet1.Models.Task { Id = 3, Name = "Break" },
-            //     new Dotnet1.Models.Task { Id = 4, Name = "Lunch" },
-            //     new Dotnet1.Models.Task { Id = 5, Name = "Day Off" }
-            // );
+            // ✅ Seed protected tasks
+            modelBuilder.Entity<TaskModel>().HasData(
+                new TaskModel { Id = 1, Name = "Task A", IsProtected = false },
+                new TaskModel { Id = 2, Name = "Task B", IsProtected = false },
+                new TaskModel { Id = 3, Name = "Break", IsProtected = true },
+                new TaskModel { Id = 4, Name = "Lunch", IsProtected = true },
+                new TaskModel { Id = 5, Name = "Day Off", IsProtected = true }
+            );
 
-            modelBuilder.Entity<Dotnet1.Models.Task>().HasData(
-        new Dotnet1.Models.Task { Id = 1, Name = "Task A", IsProtected = false },
-        new Dotnet1.Models.Task { Id = 2, Name = "Task B", IsProtected = false },
-        new Dotnet1.Models.Task { Id = 3, Name = "Break", IsProtected = true },
-        new Dotnet1.Models.Task { Id = 4, Name = "Lunch", IsProtected = true },
-        new Dotnet1.Models.Task { Id = 5, Name = "Day Off", IsProtected = true }
-    );
+            // ✅ Task → Project
+            modelBuilder.Entity<TaskModel>()
+                .HasOne(t => t.Project)
+                .WithMany(p => p.Tasks)
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Task_Project");
 
+            // ✅ TaskAssignment → Task
+            modelBuilder.Entity<TaskAssignment>()
+                .HasOne(ta => ta.Task)
+                .WithMany(t => t.TaskAssignments)
+                .HasForeignKey(ta => ta.TaskId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TaskAssignment_Task");
+
+            // ✅ TaskAssignment → User
+            modelBuilder.Entity<TaskAssignment>()
+                .HasOne(ta => ta.User)
+                .WithMany(u => u.TaskAssignments)
+                .HasForeignKey(ta => ta.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TaskAssignment_User");
+
+            // ✅ TaskSession → Task
             modelBuilder.Entity<TaskSession>()
                 .HasOne(ts => ts.Task)
                 .WithMany()
-                .HasForeignKey(ts => ts.TaskId);
+                .HasForeignKey(ts => ts.TaskId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TaskSession_Task");
+
+            // ✅ TaskSession → User
+            modelBuilder.Entity<TaskSession>()
+                .HasOne(ts => ts.User)
+                .WithMany(u => u.TaskSessions)
+                .HasForeignKey(ts => ts.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TaskSession_User");
         }
     }
 }

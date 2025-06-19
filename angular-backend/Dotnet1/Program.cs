@@ -25,6 +25,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TaskService>();
 builder.Services.AddScoped<AdminTaskService>();
+builder.Services.AddScoped<ProjectService>();
 
 // Enable controllers
 builder.Services.AddControllers();
@@ -62,6 +63,12 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(secretKey)
     };
+});
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.WriteIndented = true;
 });
 
 builder.Services.AddAuthorization();
