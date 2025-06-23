@@ -1,50 +1,25 @@
 .task-container {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 30px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 1100px;
+  margin: auto;
+  padding: 2rem;
+  font-family: "Segoe UI", sans-serif;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
 }
 
-.task-controls .task-count {
-  font-size: 14px;
-  color: #666;
+.task-count {
+  font-weight: bold;
 }
 
 .loading {
   text-align: center;
-  font-size: 16px;
-  color: #333;
-}
-
-.edit-task-form {
-  margin-bottom: 24px;
-  padding: 20px;
-  background: #f8f9fb;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-}
-
-.edit-task-form h3 {
-  font-size: 18px;
-  margin-bottom: 12px;
-}
-
-.edit-input {
-  width: 60%;
-  padding: 10px;
-  margin-right: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  font-size: 1.2rem;
+  color: gray;
 }
 
 .table-wrapper {
@@ -56,82 +31,75 @@
   border-collapse: collapse;
 }
 
-.task-table th,
-.task-table td {
-  padding: 14px 18px;
-  text-align: left;
-  border-bottom: 1px solid #eaeaea;
-  vertical-align: middle;
+.task-table th, .task-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
 }
 
 .task-table th {
-  background-color: #f5f7fa;
-  font-weight: 600;
+  background-color: #f0f0f0;
 }
 
 .assigned-users {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
+  gap: 5px;
 }
 
 .user-badge {
-  background-color: #e0f3ff;
-  color: #007bff;
-  padding: 5px 10px;
-  border-radius: 16px;
-  font-size: 13px;
-  display: inline-flex;
+  background-color: #dff0d8;
+  color: #3c763d;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  display: flex;
   align-items: center;
 }
 
 .unassign-btn {
-  background: transparent;
+  background: none;
   border: none;
-  color: #ff4d4f;
-  margin-left: 6px;
+  color: red;
+  margin-left: 4px;
   cursor: pointer;
-  font-weight: bold;
+  font-size: 1rem;
 }
 
 .user-select {
-  padding: 6px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  margin-top: 6px;
-  font-size: 14px;
+  margin-top: 5px;
+  padding: 4px;
+  font-size: 0.9rem;
 }
 
 .btn {
-  padding: 8px 14px;
-  font-size: 14px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  margin-right: 5px;
   border: none;
+  border-radius: 5px;
+  color: white;
   cursor: pointer;
-  transition: background 0.3s ease;
 }
 
 .btn-edit {
   background-color: #007bff;
-  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #0056b3;
 }
 
 .btn-delete {
   background-color: #dc3545;
-  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #b02a37;
 }
 
 .btn-save {
   background-color: #28a745;
-  color: white;
 }
 
 .btn-cancel {
   background-color: #6c757d;
-  color: white;
-}
-
-.btn:hover {
-  opacity: 0.92;
 }

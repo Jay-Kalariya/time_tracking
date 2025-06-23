@@ -42,7 +42,7 @@ namespace Dotnet1.Controllers
                 var tasks = await _service.GetTasksForUserAsync(userId);
                 return Ok(tasks);
             }
-            catch (Exception ex)
+            catch (Exception )
             {
                 return StatusCode(500, "Internal server error");
             }

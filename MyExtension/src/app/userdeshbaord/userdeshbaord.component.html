@@ -48,7 +48,7 @@
       *ngIf="showStartButton"
       [disabled]="nonWorkingPeriodActive"
     >
-      TesumeTask
+      ResumeTask
     </button>
   </ng-container>
 
@@ -59,18 +59,15 @@
     </button>
   </ng-container>
 
-  <button
+  <!-- <button
     (click)="dayOff()"
     [disabled]="nonWorkingPeriodActive || selectedTask?.name === 'Day Off'"
   >
     Day Off
-  </button>
+  </button> -->
 
   <button (click)="goToUserHistory()">View My History</button>
 </div>
-
-
-
  
 </div>
 

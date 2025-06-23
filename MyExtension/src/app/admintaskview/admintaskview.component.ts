@@ -87,28 +87,35 @@ export class AdmintaskviewComponent implements OnInit {
     });
   }
 
-  editTask(task: Task): void {
-    this.editingTaskId = task.id;
-    this.taskForm.patchValue({ name: task.name });
-  }
+ editTask(task: Task): void {
+  console.log('Editing task:', task); // already there
+  this.editingTaskId = task.id;
+  console.log('editingTaskId set to:', this.editingTaskId); // Add this
+  this.taskForm.patchValue({ name: task.name || '' });
+}
 
-  updateTask(): void {
-    if (this.editingTaskId !== null) {
-      const { name } = this.taskForm.getRawValue();
-      const updatedTask: Task = {
-        id: this.editingTaskId,
-        name
-      };
-      
-      this.taskService.updateTask(this.editingTaskId, updatedTask).subscribe({
-        next: () => {
-          this.loadTasks();
-          this.cancelEdit();
-        },
-        error: () => alert('Failed to update task')
-      });
+updateTask(): void {
+  if (this.editingTaskId !== null) {
+    const { name } = this.taskForm.getRawValue();
+    if (!name || !name.trim()) {
+      alert("Task name can't be empty");
+      return;
     }
+
+    const updatedTask: Task = {
+      id: this.editingTaskId,
+      name
+    };
+
+    this.taskService.updateTask(this.editingTaskId, updatedTask).subscribe({
+      next: () => {
+        this.loadTasks();
+        this.cancelEdit();
+      },
+      error: () => alert('Failed to update task')
+    });
   }
+}
 
   cancelEdit(): void {
     this.editingTaskId = null;

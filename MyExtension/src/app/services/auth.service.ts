@@ -23,7 +23,7 @@
     }
 
     getToken(): string | null {
-      return localStorage.getItem(this.tokenKey);
+      return localStorage.getItem("token");
     }
 
     getRole(): string | null {

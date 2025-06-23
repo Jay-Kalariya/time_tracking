@@ -61,6 +61,7 @@ export class LoginComponent implements OnInit {
   this.auth.login(this.credentials).subscribe({
     next: (res: any) => {
       // Save token to chrome.storage.local
+      localStorage.setItem('token', res.token); // ✅ Add this
       chrome.storage.local.set({ token: res.token }, () => {
         // Then call setToken and navigate
         this.auth.setToken(res.token);

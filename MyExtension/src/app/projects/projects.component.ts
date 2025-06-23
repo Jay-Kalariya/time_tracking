@@ -1,36 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { ProjectService, Project } from '../services/project.service';
 import { TaskService, Task } from '../services/task.service';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-project',
-  imports:[FormsModule,CommonModule,ReactiveFormsModule],
+  standalone: true,
+  imports: [FormsModule, CommonModule, ReactiveFormsModule],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.css']
 })
 export class ProjectComponent implements OnInit {
-  projectForm!: FormGroup;
   projects: Project[] = [];
   tasks: Task[] = [];
   message = '';
   error = '';
-  selectedProject: Project | null = null;
   selectedTaskId: number | null = null;
   selectedProjectIdForAssignment: number | null = null;
 
   constructor(
-    private fb: FormBuilder,
     private projectService: ProjectService,
     private taskService: TaskService
   ) {}
 
   ngOnInit(): void {
-    this.projectForm = this.fb.group({
-      name: ['', Validators.required]
-    });
-
     this.loadProjects();
     this.loadTasks();
   }
@@ -49,36 +43,6 @@ export class ProjectComponent implements OnInit {
     });
   }
 
-  createOrUpdateProject() {
-    if (this.projectForm.invalid) return;
-
-    if (this.selectedProject) {
-      this.projectService.updateProject(this.selectedProject.id!, this.projectForm.value).subscribe({
-        next: () => {
-          this.message = '✅ Project updated!';
-          this.error = '';
-          this.selectedProject = null;
-          this.projectForm.reset();
-          this.loadProjects();
-        },
-        error: () => this.error = '❌ Failed to update project'
-      });
-    } else {
-      this.projectService.createProject(this.projectForm.value).subscribe({
-        next: () => {
-          this.message = '✅ Project created successfully!';
-          this.error = '';
-          this.projectForm.reset();
-          this.loadProjects();
-        },
-        error: () => {
-          this.error = '❌ Error creating project';
-          this.message = '';
-        }
-      });
-    }
-  }
-
   assignTaskToProject() {
     if (!this.selectedTaskId || !this.selectedProjectIdForAssignment) return;
     this.projectService.assignTask(this.selectedTaskId, this.selectedProjectIdForAssignment).subscribe({
@@ -88,11 +52,6 @@ export class ProjectComponent implements OnInit {
       },
       error: () => this.error = '❌ Task assignment failed'
     });
-  }
-
-  selectProjectForEdit(project: Project) {
-    this.selectedProject = project;
-    this.projectForm.patchValue({ name: project.name });
   }
 
   deleteProject(id: number) {
@@ -105,10 +64,5 @@ export class ProjectComponent implements OnInit {
         error: () => this.error = '❌ Delete failed'
       });
     }
-  }
-
-  cancelEdit() {
-    this.selectedProject = null;
-    this.projectForm.reset();
   }
 }

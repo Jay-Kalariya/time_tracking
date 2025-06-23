@@ -6,18 +6,7 @@
     </div>
   </div>
 
-  <!-- Loading -->
   <div *ngIf="isLoading" class="loading">Loading tasks...</div>
-
-  <!-- Edit Task -->
-  <div *ngIf="editingTaskId !== null" class="edit-task-form">
-    <h3>Edit Task</h3>
-    <form [formGroup]="taskForm" (ngSubmit)="updateTask()">
-      <input type="text" formControlName="name" placeholder="Enter task name" class="edit-input" />
-      <button type="submit" class="btn btn-save">Save</button>
-      <button type="button" class="btn btn-cancel" (click)="cancelEdit()">Cancel</button>
-    </form>
-  </div>
 
   <!-- Task Table -->
   <div class="table-wrapper" *ngIf="!isLoading">
@@ -31,8 +20,9 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let task of tasks">
-          <td>{{ task.id }}</td>
+        <tr *ngFor="let task of tasks; let i = index">
+          <!-- <td>{{ task.id }}</td> -->
+            <td>{{ i + 1 }}</td>
           <td>{{ task.name }}</td>
           <td>
             <div class="assigned-users">
@@ -54,4 +44,24 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Edit Modal --><!-- Modal Test -->
+<!-- Put this outside any parent container like .task-container -->
+<div *ngIf="editingTaskId !== null" class="modal-backdrop">
+  <div class="modal">
+    <button class="close-btn" (click)="cancelEdit()">×</button>
+    <h3>Edit Task</h3>
+
+    <form [formGroup]="taskForm" (ngSubmit)="updateTask()">
+      <label for="taskName">Task Name</label>
+      <input id="taskName" formControlName="name" placeholder="Task name" />
+
+      <div class="modal-actions">
+        <button type="submit" class="btn primary">Save</button>
+        <button type="button" class="btn secondary" (click)="cancelEdit()">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
+
+
