@@ -232,19 +232,33 @@ ngOnInit(): void {
 
   // HEADER AUTH
 private getAuthHeaders(callback: (headers: HttpHeaders) => void): void {
-  chrome.storage.local.get(['token'], (result) => {
-    this.ngZone.run(() => { // ⬅️ Force Angular change detection
-      const token = result['token'];
-      if (token) {
-        const headers = new HttpHeaders({
-          'Authorization': `Bearer ${token}`
-        });
-        callback(headers);
-      } else {
-        console.error('No token found in chrome.storage');
-      }
+  if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    chrome.storage.local.get(['token'], (result) => {
+      this.ngZone.run(() => {
+        const token = result['token'];
+        if (token) {
+          const headers = new HttpHeaders({
+            'Authorization': `Bearer ${token}`
+          });
+          callback(headers);
+        } else {
+          console.error('No token found in chrome.storage');
+        }
+      });
     });
-  });
+  } else {
+    // Fallback for ng serve
+    const token = localStorage.getItem('token');
+    if (token) {
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`
+      });
+      callback(headers);
+    } else {
+      console.error('No token found in localStorage');
+    }
+  }
+
 
 
   }
